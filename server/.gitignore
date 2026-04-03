@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.log
+cleanup.js
+test_rating.js
+mockData.json
