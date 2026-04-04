@@ -1,21 +1,57 @@
-# Dépendances (Client et Serveur)
+# --- Dépendances ---
 node_modules/
 **/node_modules/
 
-# Variables d'environnement
+# --- Secrets & environnement (ne jamais commiter) ---
+# Fichiers .env réels et variantes locales
 .env
 **/.env
+.env.*
+**/.env.*
+# Templates sans secrets : à versionner
+!.env.example
+!**/.env.example
 
-# Build du client (React/Vite)
+# Clés, certificats, exports de credentials
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+*.secret
+credentials.json
+*credentials*.json
+serviceAccount*.json
+.aws/credentials
+
+# --- Build & cache ---
 dist/
 build/
+.cache/
+**/.vite/
+.turbo/
 
-# Fichiers de debug et logs
+# --- Logs & debug ---
+*.log
 npm-debug.log*
 yarn-debug.log*
-.DS_Store
+yarn-error.log*
+pnpm-debug.log*
 
-# Tes scripts de test locaux
+# --- OS & éditeurs ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+
+# --- Tests / couverture ---
+coverage/
+.nyc_output/
+
+# Scripts & fichiers locaux sensibles (optionnel projet)
 cleanup.js
 test_rating.js
 r.txt

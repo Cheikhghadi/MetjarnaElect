@@ -1,9 +1,22 @@
 node_modules/
 dist/
 dist-ssr/
-*.local
+
+# Secrets & env Vite — jamais commiter les vraies URLs / tokens
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
+
+# Fichiers locaux Vite (souvent sensibles)
+*.local
+
+.cache/
+.vite/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 .DS_Store
