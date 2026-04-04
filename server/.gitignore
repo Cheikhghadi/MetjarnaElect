@@ -4,4 +4,3 @@ node_modules/
 cleanup.js
 test_rating.js
 mockData.json
-.env.example

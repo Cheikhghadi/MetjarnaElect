@@ -39,7 +39,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false);
     }
   },
   credentials: true
@@ -77,10 +77,7 @@ socketHandler(io);
 // Database Connection & Server Start
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGO_URI)
 .then(() => {
   console.log('MongoDB Connected...');
   server.listen(PORT, () => {

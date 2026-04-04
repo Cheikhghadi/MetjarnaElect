@@ -30,26 +30,38 @@ const verifyTOTPCode = (secret, token) => {
   });
 };
 
-// Send Email
+// Send Email (credentials uniquement via SMTP_USER / SMTP_PASS — jamais en dur dans le code)
 const sendEmail = async (to, subject, text) => {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+
+  if (!user || !pass) {
+    const msg = 'SMTP_USER ou SMTP_PASS manquant : impossible d\'envoyer l\'email';
+    console.error(msg);
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(msg);
+    }
+    console.log('--- DEV (email non envoye) ---');
+    console.log(`To: ${to}\nSubject: ${subject}\n${text}`);
+    console.log('-------------------------------');
+    return;
+  }
+
+  const port = Number(process.env.SMTP_PORT) || 465;
+  const secure = port === 465;
+
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER || 'cheikhghadi5@gmail.com',
-      pass: process.env.SMTP_PASS || 'yayr undl wgkg pqkm',
-    },
-    tls: {
-      rejectUnauthorized: false
-    },
-    connectionTimeout: 10000, // 10s
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port,
+    secure,
+    auth: { user, pass },
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000,
   });
 
   const mailOptions = {
-    from: `"ZenShop" <${process.env.SMTP_USER || 'cheikhghadi5@gmail.com'}>`,
+    from: `"ZenShop" <${user}>`,
     to,
     subject,
     text,
@@ -60,11 +72,13 @@ const sendEmail = async (to, subject, text) => {
     console.log(`Email sent to ${to}`);
   } catch (error) {
     console.error('Error sending email:', error);
-    // In dev, log the code so we can continue without working SMTP
-    console.log('--- DEVELOPMENT FALLBACK ---');
-    console.log(`Subject: ${subject}`);
-    console.log(`Body: ${text}`);
-    console.log('----------------------------');
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('--- DEV FALLBACK ---');
+      console.log(`To: ${to}\nSubject: ${subject}\n${text}`);
+      console.log('--------------------');
+      return;
+    }
+    throw error;
   }
 };
 
