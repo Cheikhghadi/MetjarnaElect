@@ -1,6 +1,5 @@
 # MetjarnaElect ⚡
-Application E-commerce Full-Stack (Projet SupNum RSS)
-
+Application E-commerce Full-Stack
 ## Installation
 1. `cd server && npm install`
 2. `cd client && npm install`
