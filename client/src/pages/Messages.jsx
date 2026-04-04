@@ -24,7 +24,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://matjarna-backend.onrender.com');
 
 const Messages = () => {
   const [inbox, setInbox] = useState([]);
