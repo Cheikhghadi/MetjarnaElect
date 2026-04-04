@@ -35,7 +35,7 @@ const Verify = () => {
       addToast('Vérification réussie !');
       navigate('/setup-profile');
     } catch (err) {
-      addToast(err.response?.data?.message || 'Code invalide', 'error');
+      addToast(err.apiMessage || err.response?.data?.message || 'Code invalide', 'error');
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,7 @@ const Verify = () => {
         navigate('/setup-profile'); // Assuming everyone needs to setup name initially now
       }
     } catch (err) {
-      addToast(err.response?.data?.message || 'Code invalide', 'error');
+      addToast(err.apiMessage || err.response?.data?.message || 'Code invalide', 'error');
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,7 @@ const ResendButton = ({ email }) => {
       addToast('Un nouveau code a été envoyé !');
       setCooldown(60);
     } catch (err) {
-      addToast(err.response?.data?.message || 'Erreur lors de l\'envoi', 'error');
+      addToast(err.apiMessage || err.response?.data?.message || 'Erreur lors de l\'envoi', 'error');
     } finally {
       setLoading(false);
     }

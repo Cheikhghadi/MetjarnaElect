@@ -35,7 +35,7 @@ const ResetPassword = () => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Code invalide ou expiré');
+      setError(err.apiMessage || err.response?.data?.message || 'Code invalide ou expiré');
     } finally {
       setLoading(false);
     }

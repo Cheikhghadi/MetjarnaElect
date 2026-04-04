@@ -22,7 +22,7 @@ const Login = () => {
       if (err.response?.status === 401 && err.response?.data?.message?.includes('vérifier')) {
          navigate('/verify', { state: { email: formData.email } });
       } else {
-         setError(err.response?.data?.message || 'Identifiants invalides');
+         setError(err.apiMessage || err.response?.data?.message || 'Identifiants invalides');
       }
     } finally {
       setLoading(false);

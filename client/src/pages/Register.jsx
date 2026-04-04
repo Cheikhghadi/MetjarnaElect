@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
@@ -10,6 +10,10 @@ const Register = () => {
   const navigate = useNavigate();
   const { addToast } = useToast();
 
+  useEffect(() => {
+    api.get('/health').catch(() => {});
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -19,7 +23,7 @@ const Register = () => {
       addToast('Compte créé ! Veuillez vérifier votre email.');
       navigate('/verify', { state: { email: formData.email } });
     } catch (err) {
-      addToast(err.response?.data?.message || 'Une erreur est survenue', 'error');
+      addToast(err.apiMessage || err.response?.data?.message || 'Une erreur est survenue', 'error');
     } finally {
       setLoading(false);
     }

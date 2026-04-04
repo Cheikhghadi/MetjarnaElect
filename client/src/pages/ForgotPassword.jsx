@@ -21,7 +21,7 @@ const ForgotPassword = () => {
         navigate('/reset-password', { state: { email } });
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Une erreur est survenue');
+      setError(err.apiMessage || err.response?.data?.message || 'Une erreur est survenue');
     } finally {
       setLoading(false);
     }

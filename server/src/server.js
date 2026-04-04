@@ -45,6 +45,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   'https://matjarnaelektroni.onrender.com',
+  'https://matjamaelektroni.onrender.com',
   'http://localhost:5173',
 ].filter(Boolean);
 
@@ -82,6 +83,11 @@ app.use((req, res, next) => {
 });
 
 app.use('/api', apiLimiter);
+
+app.get('/api/health', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json({ ok: true, t: Date.now() });
+});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
