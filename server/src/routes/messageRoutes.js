@@ -2,14 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { getMessages, sendMessage, getInbox } = require('../controllers/messageController');
 const { protect } = require('../middleware/authMiddleware');
+const { messageWriteLimiter } = require('../middleware/securityMiddleware');
 
-// @route   GET /api/messages/inbox/all
 router.get('/inbox/all', protect, getInbox);
-
-// @route   GET /api/messages/:userId
 router.get('/:userId', protect, getMessages);
-
-// @route   POST /api/messages/:userId
-router.post('/:userId', protect, sendMessage);
+router.post('/:userId', protect, messageWriteLimiter, sendMessage);
 
 module.exports = router;

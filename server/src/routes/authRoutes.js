@@ -10,26 +10,29 @@ const {
   getProfileById,
   getUserById,
   forgotPassword,
-  resetPassword
+  resetPassword,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const {
+  loginLimiter,
+  registerLimiter,
+  verifyTotpLimiter,
+  resendCodeLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
+} = require('../middleware/securityMiddleware');
 
-// Auth publiques
-router.post('/register', registerUser);
-router.post('/verify-totp', verifyUser);
-router.post('/login', loginUser);
-router.post('/resend-code', resendCode);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+router.post('/register', registerLimiter, registerUser);
+router.post('/verify-totp', verifyTotpLimiter, verifyUser);
+router.post('/login', loginLimiter, loginUser);
+router.post('/resend-code', resendCodeLimiter, resendCode);
+router.post('/forgot-password', forgotPasswordLimiter, forgotPassword);
+router.post('/reset-password', resetPasswordLimiter, resetPassword);
 
-// Profil prive (utilisateur connecte)
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 
-// BUG FIX : Routes manquantes cote client
-// Profil public d'un utilisateur + ses produits
 router.get('/profile/:id', getProfileById);
-// Infos basiques d'un utilisateur (messagerie, editProfile)
 router.get('/user/:id', protect, getUserById);
 
 module.exports = router;

@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Follow = require('../models/Follow');
 const Product = require('../models/Product');
 const { generateToken, generateTOTPSecret, generateTOTPCode, verifyTOTPCode, sendEmail } = require('../utils/auth');
+const { isValidEmail, normalizeEmail, isValidObjectId } = require('../utils/validate');
 
 // Helper: champs publics du user
 const publicUserFields = '_id name email avatar whatsapp bio role isVerified createdAt';
@@ -17,12 +18,21 @@ const registerUser = async (req, res, next) => {
       res.status(400);
       throw new Error('Email et mot de passe requis');
     }
+    const emailNorm = normalizeEmail(email);
+    if (!isValidEmail(emailNorm)) {
+      res.status(400);
+      throw new Error('Adresse email invalide');
+    }
     if (password.length < 6) {
       res.status(400);
       throw new Error('Le mot de passe doit contenir au moins 6 caracteres');
     }
+    if (password.length > 128) {
+      res.status(400);
+      throw new Error('Mot de passe trop long');
+    }
 
-    let user = await User.findOne({ email: email.toLowerCase().trim() });
+    let user = await User.findOne({ email: emailNorm });
 
     if (user) {
       if (user.isVerified) {
@@ -38,7 +48,7 @@ const registerUser = async (req, res, next) => {
       
       const code = generateTOTPCode(totpSecret.base32);
       await sendEmail(
-        email,
+        emailNorm,
         'ZenShop - Nouveau code de verification',
         `Bonjour, voici votre nouveau code de verification ZenShop : ${code}`
       );
@@ -51,14 +61,14 @@ const registerUser = async (req, res, next) => {
 
     const totpSecret = generateTOTPSecret();
     user = await User.create({
-      email,
+      email: emailNorm,
       password,
       totpSecret: totpSecret.base32
     });
 
     const code = generateTOTPCode(totpSecret.base32);
     await sendEmail(
-      email,
+      emailNorm,
       'ZenShop - Code de verification',
       `Bonjour, votre code de verification ZenShop est : ${code}`
     );
@@ -79,12 +89,24 @@ const registerUser = async (req, res, next) => {
 const verifyUser = async (req, res, next) => {
   const { email, code } = req.body;
   try {
-    if (!email || !code) {
+    if (!email || code == null || code === '') {
       res.status(400);
       throw new Error('Email et code requis');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const emailNorm = normalizeEmail(email);
+    if (!isValidEmail(emailNorm)) {
+      res.status(400);
+      throw new Error('Adresse email invalide');
+    }
+
+    const codeStr = String(code).trim().replace(/\s+/g, '');
+    if (!/^\d{6}$/.test(codeStr)) {
+      res.status(400);
+      throw new Error('Le code doit comporter 6 chiffres');
+    }
+
+    const user = await User.findOne({ email: emailNorm });
     if (!user) {
       res.status(404);
       throw new Error('Utilisateur non trouve');
@@ -106,9 +128,8 @@ const verifyUser = async (req, res, next) => {
       });
     }
 
-    // BUG FIX : Code de test 000000 uniquement en dev/test
-    const isTestCode = process.env.NODE_ENV !== 'production' && code === '000000';
-    const isValid = isTestCode || verifyTOTPCode(user.totpSecret, code);
+    const isTestCode = process.env.NODE_ENV !== 'production' && codeStr === '000000';
+    const isValid = isTestCode || verifyTOTPCode(user.totpSecret, codeStr);
 
     if (!isValid) {
       res.status(400);
@@ -147,7 +168,17 @@ const loginUser = async (req, res, next) => {
       throw new Error('Email et mot de passe requis');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const emailNorm = normalizeEmail(email);
+    if (!isValidEmail(emailNorm)) {
+      res.status(400);
+      throw new Error('Adresse email invalide');
+    }
+    if (password.length > 128) {
+      res.status(401);
+      throw new Error('Email ou mot de passe invalide');
+    }
+
+    const user = await User.findOne({ email: emailNorm });
     if (!user || !(await user.comparePassword(password))) {
       res.status(401);
       throw new Error('Email ou mot de passe invalide');
@@ -185,24 +216,31 @@ const resendCode = async (req, res, next) => {
       throw new Error('Email requis');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) {
-      res.status(404);
-      throw new Error('Utilisateur non trouve');
-    }
-    if (user.isVerified) {
+    const emailNorm = normalizeEmail(email);
+    if (!isValidEmail(emailNorm)) {
       res.status(400);
-      throw new Error('Compte deja verifie');
+      throw new Error('Adresse email invalide');
     }
 
-    // Regenerer un secret TOTP pour un nouveau code frais
+    const user = await User.findOne({ email: emailNorm });
+    if (!user) {
+      return res.json({
+        message: 'Si un compte non verifie existe pour cet email, un nouveau code a ete envoye.',
+      });
+    }
+    if (user.isVerified) {
+      return res.json({
+        message: 'Si un compte non verifie existe pour cet email, un nouveau code a ete envoye.',
+      });
+    }
+
     const totpSecret = generateTOTPSecret();
     user.totpSecret = totpSecret.base32;
     await user.save();
 
     const code = generateTOTPCode(totpSecret.base32);
     await sendEmail(
-      email,
+      emailNorm,
       'ZenShop - Nouveau code de verification',
       `Bonjour, votre nouveau code de verification ZenShop est : ${code}`
     );
@@ -278,6 +316,10 @@ const updateProfile = async (req, res, next) => {
 // ============================================================
 const getProfileById = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      res.status(400);
+      throw new Error('Identifiant invalide');
+    }
     const user = await User.findById(req.params.id).select(
       '-password -totpSecret -resetPasswordCode -resetPasswordExpires'
     );
@@ -307,6 +349,10 @@ const getProfileById = async (req, res, next) => {
 // ============================================================
 const getUserById = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      res.status(400);
+      throw new Error('Identifiant invalide');
+    }
     const user = await User.findById(req.params.id).select('name avatar whatsapp bio role');
     if (!user) {
       res.status(404);
@@ -330,24 +376,34 @@ const forgotPassword = async (req, res, next) => {
       throw new Error('Email requis');
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const emailNorm = normalizeEmail(email);
+    if (!isValidEmail(emailNorm)) {
+      res.status(400);
+      throw new Error('Adresse email invalide');
+    }
+
+    const user = await User.findOne({ email: emailNorm });
+    const okMessage = {
+      message:
+        'Si un compte existe pour cet email, vous recevrez un code de recuperation sous peu.',
+    };
+
     if (!user) {
-      res.status(404);
-      throw new Error('Aucun compte associe a cet email');
+      return res.json(okMessage);
     }
 
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     user.resetPasswordCode = resetCode;
-    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
     await sendEmail(
-      email,
+      emailNorm,
       'ZenShop - Recuperation de mot de passe',
       `Bonjour, votre code de recuperation ZenShop est : ${resetCode}. Il expire dans 10 minutes.`
     );
 
-    res.json({ message: 'Code de recuperation envoye par email' });
+    res.json(okMessage);
   } catch (error) {
     next(error);
   }
@@ -360,19 +416,36 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   const { email, code, password } = req.body;
   try {
-    if (!email || !code || !password) {
+    if (!email || code == null || code === '' || !password) {
       res.status(400);
       throw new Error('Email, code et nouveau mot de passe requis');
     }
+
+    const emailNorm = normalizeEmail(email);
+    if (!isValidEmail(emailNorm)) {
+      res.status(400);
+      throw new Error('Adresse email invalide');
+    }
+
+    const codeStr = String(code).trim().replace(/\s+/g, '');
+    if (!/^\d{6}$/.test(codeStr)) {
+      res.status(400);
+      throw new Error('Code de recuperation invalide');
+    }
+
     if (password.length < 6) {
       res.status(400);
       throw new Error('Le nouveau mot de passe doit contenir au moins 6 caracteres');
     }
+    if (password.length > 128) {
+      res.status(400);
+      throw new Error('Mot de passe trop long');
+    }
 
     const user = await User.findOne({
-      email: email.toLowerCase().trim(),
-      resetPasswordCode: code,
-      resetPasswordExpires: { $gt: Date.now() }
+      email: emailNorm,
+      resetPasswordCode: codeStr,
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {

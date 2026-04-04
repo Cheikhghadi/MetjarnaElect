@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import api from '../utils/api';
@@ -24,7 +24,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-const socket = io(import.meta.env.VITE_SOCKET_URL || 'https://metjarna-backend.onrender.com');
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://metjarna-backend.onrender.com';
 
 const Messages = () => {
   const [inbox, setInbox] = useState([]);
@@ -48,67 +48,107 @@ const Messages = () => {
   const query = new URLSearchParams(location.search);
   const targetId = query.get('user');
 
-  useEffect(() => {
-    const handleUserChange = () => {
-      setUser(JSON.parse(localStorage.getItem('user')));
-    };
-    window.addEventListener('userStateChange', handleUserChange);
-    
-    fetchInbox();
-    if (targetId) {
-       startConversation(targetId);
-    }
+  const socketRef = useRef(null);
+  const threadIdRef = useRef('');
 
-    socket.on('receive_message', (data) => {
-      if (data.threadId === threadId) {
-        setMessages(prev => [...prev, data]);
-      }
-      fetchInbox();
-    });
-
-    return () => {
-      window.removeEventListener('userStateChange', handleUserChange);
-      socket.off('receive_message');
-    };
-  }, [targetId]);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const fetchInbox = async () => {
+  const fetchInbox = useCallback(async () => {
     try {
       const { data } = await api.get('/messages/inbox/all');
       setInbox(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  const startConversation = async (otherUserId) => {
+  useEffect(() => {
+    threadIdRef.current = threadId;
+  }, [threadId]);
+
+  useEffect(() => {
+    const handleUserChange = () => {
+      setUser(JSON.parse(localStorage.getItem('user')));
+    };
+    window.addEventListener('userStateChange', handleUserChange);
+    return () => window.removeEventListener('userStateChange', handleUserChange);
+  }, []);
+
+  const startConversation = useCallback(async (otherUserId) => {
     try {
       const { data } = await api.get(`/messages/${otherUserId}`);
       setMessages(data);
-      
-      const tId = user ? [user._id, otherUserId].sort().join('_') : `anon_${otherUserId}`;
+
+      const current = user || JSON.parse(localStorage.getItem('user') || 'null');
+      if (!current?._id) return;
+      const tId = [current._id, otherUserId].sort().join('_');
       setThreadId(tId);
-      socket.emit('join_thread', tId);
-      
-      let otherUser = inbox.find(i => i.user._id === otherUserId)?.user;
-      
-      if (!otherUser) {
-        try {
-          const res = await api.get(`/auth/user/${otherUserId}`);
-          otherUser = res.data;
-        } catch (e) {
-          otherUser = { _id: otherUserId, name: 'Utilisateur' };
-        }
+
+      let otherUser;
+      try {
+        const res = await api.get(`/auth/user/${otherUserId}`);
+        otherUser = res.data;
+      } catch (e) {
+        otherUser = { _id: otherUserId, name: 'Utilisateur' };
       }
       setSelectedUser(otherUser);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchInbox();
+    if (targetId) {
+      startConversation(targetId);
+    }
+  }, [targetId, fetchInbox, startConversation]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || !user?._id) {
+      return undefined;
+    }
+
+    const s = io(SOCKET_URL, {
+      auth: { token },
+      transports: ['websocket', 'polling'],
+    });
+    socketRef.current = s;
+
+    const onReceive = (data) => {
+      if (data.threadId === threadIdRef.current) {
+        setMessages((prev) => [...prev, data]);
+      }
+      fetchInbox();
+    };
+    s.on('receive_message', onReceive);
+    s.on('connect', () => {
+      if (threadIdRef.current) {
+        s.emit('join_thread', threadIdRef.current);
+      }
+    });
+    s.on('connect_error', (err) => {
+      console.error('Socket:', err.message);
+    });
+
+    return () => {
+      s.off('receive_message', onReceive);
+      s.disconnect();
+      socketRef.current = null;
+    };
+  }, [user?._id, fetchInbox]);
+
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s || !threadId) return undefined;
+    s.emit('join_thread', threadId);
+    return () => {
+      s.emit('leave_thread', threadId);
+    };
+  }, [threadId]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
@@ -125,7 +165,7 @@ const Messages = () => {
       };
       
       setMessages(prev => [...prev, msgData]);
-      socket.emit('send_message', msgData);
+      socketRef.current?.emit('send_message', msgData);
       setNewMessage('');
       fetchInbox();
     } catch (err) {
@@ -197,7 +237,7 @@ const Messages = () => {
       };
       
       setMessages(prev => [...prev, msgData]);
-      socket.emit('send_message', msgData);
+      socketRef.current?.emit('send_message', msgData);
       fetchInbox();
     } catch (err) {
       addToast("Erreur lors de l'envoi du fichier", 'error');
