@@ -33,10 +33,15 @@ const verifyTOTPCode = (secret, token) => {
 // Send Email
 const sendEmail = async (to, subject, text) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: process.env.SMTP_USER || 'cheikhghadi5@gmail.com',
+      pass: process.env.SMTP_PASS || 'yayr undl wgkg pqkm',
+    },
+    tls: {
+      rejectUnauthorized: false
     },
     connectionTimeout: 10000, // 10s
     greetingTimeout: 10000,
@@ -44,7 +49,7 @@ const sendEmail = async (to, subject, text) => {
   });
 
   const mailOptions = {
-    from: `"ZenShop" <${process.env.SMTP_USER}>`,
+    from: `"ZenShop" <${process.env.SMTP_USER || 'cheikhghadi5@gmail.com'}>`,
     to,
     subject,
     text,
