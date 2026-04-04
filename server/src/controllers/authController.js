@@ -22,14 +22,35 @@ const registerUser = async (req, res, next) => {
       throw new Error('Le mot de passe doit contenir au moins 6 caracteres');
     }
 
-    const userExists = await User.findOne({ email: email.toLowerCase().trim() });
-    if (userExists) {
-      res.status(400);
-      throw new Error("L'utilisateur existe deja");
+    let user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    if (user) {
+      if (user.isVerified) {
+        res.status(400);
+        throw new Error("L'utilisateur existe deja");
+      }
+      
+      // S'il existe mais n'est pas vérifié (OTP non confirmé), on lui permet de s'inscrire à nouveau
+      const totpSecret = generateTOTPSecret();
+      user.password = password;
+      user.totpSecret = totpSecret.base32;
+      await user.save();
+      
+      const code = generateTOTPCode(totpSecret.base32);
+      await sendEmail(
+        email,
+        'ZenShop - Nouveau code de verification',
+        `Bonjour, voici votre nouveau code de verification ZenShop : ${code}`
+      );
+
+      return res.status(200).json({
+        message: 'Compte existant mis a jour. Veuillez verifier votre email pour le nouveau code.',
+        email: user.email
+      });
     }
 
     const totpSecret = generateTOTPSecret();
-    const user = await User.create({
+    user = await User.create({
       email,
       password,
       totpSecret: totpSecret.base32
