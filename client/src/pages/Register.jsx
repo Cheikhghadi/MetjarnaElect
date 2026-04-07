@@ -4,7 +4,7 @@ import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
 
 const Register = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -57,6 +57,18 @@ const Register = () => {
         </div>
         
         <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label" style={{ color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem' }}>Full Name</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="Votre nom complet"
+              style={{ height: '54px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
+            />
+          </div>
           <div className="form-group">
             <label className="form-label" style={{ color: 'var(--text-muted)', fontWeight: '700', fontSize: '0.75rem' }}>Email Address</label>
             <input 

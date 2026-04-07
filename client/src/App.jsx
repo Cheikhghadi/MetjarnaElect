@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Navbar';
 import BottomNav from './components/BottomNav';
 
-// Pages (will be created next)
+// Core Pages
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Verify from './pages/Verify';

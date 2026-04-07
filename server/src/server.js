@@ -44,9 +44,9 @@ app.set('trust proxy', 1);
 const server = http.createServer(app);
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  'https://matjarnaelektroni.onrender.com',
-  'https://matjamaelektroni.onrender.com',
+  'https://matjarnaelektroni.onrender.com', // Public production URL
   'http://localhost:5173',
+  'http://localhost:3000',
 ].filter(Boolean);
 
 const io = new Server(server, {
@@ -106,18 +106,17 @@ app.use(errorHandler);
 
 socketHandler(io);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/zenshop')
   .then(() => {
-    console.log('MongoDB Connected...');
+    console.log('✅ MongoDB Connected Ready for ZenShop');
     server.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`🚀 Server running on port ${PORT}`);
     });
   })
   .catch((err) => {
-    console.error('CRITICAL: Database connection failed. ZenShop cannot start.');
-    console.error(err.message);
+    console.error('❌ MongoDB Connection Error:', err.message);
     process.exit(1);
   });

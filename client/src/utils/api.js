@@ -21,7 +21,7 @@ export function getApiErrorMessage(error) {
 }
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://metjarna-backend.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
   timeout: DEFAULT_TIMEOUT_MS,
   headers: { 'Content-Type': 'application/json' },
 });

@@ -23,3 +23,4 @@ mockData.json
 # Scripts locaux
 cleanup.js
 test_rating.js
+data/
