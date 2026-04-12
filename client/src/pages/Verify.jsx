@@ -26,7 +26,7 @@ const Verify = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.post('/auth/verify-totp', { email, code: codeToSubmit });
+      const { data } = await api.post('/auth/verify', { email, code: codeToSubmit });
       localStorage.setItem('token', data.token);
       if (data.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -46,7 +46,7 @@ const Verify = () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.post('/auth/verify-totp', { email, code });
+      const { data } = await api.post('/auth/verify', { email, code });
       localStorage.setItem('token', data.token);
       if (data.user) {
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -128,7 +128,7 @@ const ResendButton = ({ email }) => {
     if (cooldown > 0 || loading) return;
     setLoading(true);
     try {
-      await api.post('/auth/resend-code', { email });
+      await api.post('/auth/resend-otp', { email });
       addToast('Un nouveau code a été envoyé !');
       setCooldown(60);
     } catch (err) {

@@ -3,9 +3,13 @@ const router = express.Router();
 const {
   registerUser,
   loginUser,
+  verifyEmail,
+  resendOTP
 } = require('../controllers/authController');
 
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/verify', verifyEmail);
+router.post('/resend-otp', resendOTP);
 
 module.exports = router;

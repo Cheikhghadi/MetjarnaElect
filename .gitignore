@@ -9,8 +9,6 @@ node_modules/
 .env.*
 **/.env.*
 # Templates sans secrets : à versionner
-!.env.example
-!**/.env.example
 
 # Clés, certificats, exports de credentials
 *.pem

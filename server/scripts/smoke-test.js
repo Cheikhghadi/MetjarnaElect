@@ -7,7 +7,7 @@
 const http = require('node:http');
 const https = require('node:https');
 
-const BASE = process.env.SMOKE_URL || 'http://127.0.0.1:5000';
+const BASE = process.env.SMOKE_URL || 'http://127.0.0.1:5001';
 
 function req(method, path, jsonBody) {
   return new Promise((resolve, reject) => {
