@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const Product = require('../models/Product');
-const { generateToken, generateTOTPSecret, generateTOTPCode, sendEmail } = require('../utils/auth');
+const { generateToken, generateTOTPSecret, generateOTPCode, sendEmail } = require('../utils/auth');
 
 // Helper: champs publics du user
 const publicUserFields = ['_id', 'name', 'email', 'avatar', 'whatsapp', 'bio', 'role', 'isVerified', 'createdAt'];
