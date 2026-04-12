@@ -10,6 +10,8 @@ const userSchema = new mongoose.Schema({
   bio: { type: String, default: '' },
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   isVerified: { type: Boolean, default: false },
+  otpCode: { type: String },
+  otpExpires: { type: Date },
   totpSecret: { type: String },
   resetPasswordCode: { type: String },
   resetPasswordExpires: { type: Date },

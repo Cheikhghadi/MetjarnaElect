@@ -23,22 +23,23 @@ const registerUser = async (req, res, next) => {
       throw new Error("L'utilisateur existe deja avec cet email.");
     }
 
-    const totpSecret = generateTOTPSecret().base32;
-    const otpCode = generateTOTPCode(totpSecret);
+    const otpCode = generateOTPCode();
 
     if (!user) {
       user = new User({
         name,
         email,
         password, // Le model s'occupe du hashing via pre('save')
-        totpSecret,
+        otpCode,
+        otpExpires: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
         isVerified: false
       });
     } else {
       // Reprendre un compte non-vérifié (permet de corriger une erreur d'email précédente)
       user.name = name;
       user.password = password;
-      user.totpSecret = totpSecret;
+      user.otpCode = otpCode;
+      user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
     }
 
     await user.save();
@@ -94,9 +95,9 @@ const verifyEmail = async (req, res, next) => {
 
     // En DEV, on accepte souvent 000000 comme bypass
     const isDevBypass = process.env.NODE_ENV !== 'production' && code === '000000';
+    const isCodeValid = user.otpCode === code && user.otpExpires > new Date();
     
-    const { verifyTOTPCode } = require('../utils/auth');
-    const isValid = isDevBypass || verifyTOTPCode(user.totpSecret, code);
+    const isValid = isDevBypass || isCodeValid;
 
     if (!isValid) {
       res.status(400);
@@ -137,7 +138,10 @@ const resendOTP = async (req, res, next) => {
       throw new Error('Utilisateur non trouve');
     }
 
-    const otpCode = generateTOTPCode(user.totpSecret);
+    const otpCode = generateOTPCode();
+    user.otpCode = otpCode;
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    await user.save();
 
     await sendEmail(
       email,

@@ -12,12 +12,9 @@ const generateTOTPSecret = () => {
   return speakeasy.generateSecret({ length: 20 });
 };
 
-// Generate 6-digit code
-const generateTOTPCode = (secret) => {
-  return speakeasy.totp({
-    secret: secret,
-    encoding: 'base32'
-  });
+// Generate 6-digit random code
+const generateOTPCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 // Verify TOTP code
@@ -85,7 +82,7 @@ const sendEmail = async (to, subject, text) => {
 module.exports = {
   generateToken,
   generateTOTPSecret,
-  generateTOTPCode,
+  generateOTPCode,
   verifyTOTPCode,
   sendEmail
 };
