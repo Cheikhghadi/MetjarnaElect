@@ -35,7 +35,7 @@ const sendEmail = async (to, subject, text) => {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
 
-  if (!user || !pass) {
+  if (!user || !pass || user === 'votre-email@gmail.com') {
     const msg = 'SMTP_USER ou SMTP_PASS manquant : impossible d\'envoyer l\'email';
     console.error(msg);
     if (process.env.NODE_ENV === 'production') {

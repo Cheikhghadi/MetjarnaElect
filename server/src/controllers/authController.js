@@ -36,11 +36,17 @@ const registerUser = async (req, res, next) => {
 
     await user.save();
 
-    await sendEmail(
-      email,
-      'Bienvenue sur ZenShop - Vérification',
-      `Bonjour ${name},\n\nVoici votre code de vérification : ${otpCode}\n\nCe code est valable pour une session locale.`
-    );
+    try {
+      await sendEmail(
+        email,
+        'Bienvenue sur ZenShop - Vérification',
+        `Bonjour ${name},\n\nVoici votre code de vérification : ${otpCode}\n\nCe code est valable pour une session locale.`
+      );
+    } catch (emailError) {
+      await User.deleteOne({ _id: user._id });
+      res.status(500);
+      throw new Error("L'envoi de l'email de vérification a échoué. Veuillez vérifier les configurations SMTP ou réessayer.");
+    }
 
     const token = generateToken(user._id);
 
