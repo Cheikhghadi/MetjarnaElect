@@ -49,13 +49,7 @@ const sendEmail = async (to, subject, text) => {
 
   const transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: 'smtp.gmail.com',
-    port,
-    secure,
     auth: { user, pass },
-    connectionTimeout: 15000,
-    greetingTimeout: 15000,
-    socketTimeout: 15000,
   });
 
   const mailOptions = {
@@ -69,7 +63,11 @@ const sendEmail = async (to, subject, text) => {
     await transporter.sendMail(mailOptions);
     console.log(`Email sent to ${to}`);
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('SMTP Error Detailed:', {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
     if (process.env.NODE_ENV !== 'production') {
       console.log('--- DEV FALLBACK ---');
       console.log(`To: ${to}\nSubject: ${subject}\n${text}`);
