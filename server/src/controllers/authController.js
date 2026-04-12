@@ -53,7 +53,12 @@ const registerUser = async (req, res, next) => {
       // On ne supprime plus l'utilisateur ici, car la nouvelle logique au-dessus
       // permet de retenter l'inscription (elle mettra à jour l'entrée non-vérifiée).
       res.status(500);
-      throw new Error("Compte créé mais l'envoi du code a échoué. Veuillez vérifier vos paramètres SMTP ou réessayer de vous inscrire avec le même email.");
+      const isProd = process.env.NODE_ENV === 'production';
+      const helpMsg = isProd 
+        ? "L'envoi de l'email a échoué. Assurez-vous d'avoir configuré SMTP_USER et SMTP_PASS dans le dashboard Render (onglet Environment)."
+        : "L'envoi de l'email a échoué. Vérifiez vos paramètres SMTP ou utilisez le code 000000 (Mode Test).";
+      
+      throw new Error(`Compte créé mais l'envoi du code a échoué. ${helpMsg}`);
     }
 
     const token = generateToken(user._id);

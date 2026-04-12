@@ -70,20 +70,20 @@ const Verify = () => {
       <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '40%', height: '40%', background: 'var(--primary)', opacity: 0.1, filter: 'blur(120px)', borderRadius: '50%' }}></div>
       <div style={{ position: 'absolute', bottom: '-10%', left: '-10%', width: '30%', height: '30%', background: 'var(--secondary)', opacity: 0.1, filter: 'blur(100px)', borderRadius: '50%' }}></div>
 
-      <div className="auth-card glass animate-fade" style={{ maxWidth: '420px', padding: '3rem', zIndex: 1, textAlign: 'center' }}>
+      <div className="auth-card glass animate-fade" style={{ textAlign: 'center' }}>
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ width: '48px', height: '48px', margin: '0 auto 1.25rem', borderRadius: '14px', background: 'var(--gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '900', fontSize: '1.5rem', boxShadow: '0 8px 25px rgba(139, 92, 246, 0.4)' }}>Z</div>
-          <h1 style={{ fontSize: '2rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.04em', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Vérification</h1>
+          <h1 className="auth-title">Vérification</h1>
           <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: '500' }}>
             Code envoyé à <strong style={{ color: 'var(--text-main)' }}>{email}</strong>
           </p>
         </div>
         
-        {error && <p style={{ color: 'var(--error)', marginBottom: '1rem' }}>{error}</p>}
+        {error && <p style={{ color: 'var(--error)', marginBottom: '1rem', fontSize: '0.85rem' }}>{error}</p>}
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Code à 6 chiffres</label>
+            <label className="form-label" style={{ textAlign: 'center' }}>Code à 6 chiffres</label>
             <input 
               type="text" 
               className="form-input" 
@@ -92,7 +92,7 @@ const Verify = () => {
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required
-              style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem', marginBottom: '0.5rem' }}
+              style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.3rem', marginBottom: '0.5rem' }}
             />
             <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textAlign: 'center' }}>
               Mode Test : Entrez <strong>000000</strong> pour continuer
