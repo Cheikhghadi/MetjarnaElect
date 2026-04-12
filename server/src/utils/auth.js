@@ -44,17 +44,18 @@ const sendEmail = async (to, subject, text) => {
     return;
   }
 
-  const port = Number(process.env.SMTP_PORT) || 465;
+  const port = Number(process.env.SMTP_PORT) || 587;
   const secure = port === 465;
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    service: 'gmail',
+    host: 'smtp.gmail.com',
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
   });
 
   const mailOptions = {
