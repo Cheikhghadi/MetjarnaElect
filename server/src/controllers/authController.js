@@ -17,22 +17,29 @@ const registerUser = async (req, res, next) => {
       throw new Error('Nom, email et mot de passe requis');
     }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    let user = await User.findOne({ email });
+    if (user && user.isVerified) {
       res.status(400);
-      throw new Error("L'utilisateur existe deja");
+      throw new Error("L'utilisateur existe deja avec cet email.");
     }
 
     const totpSecret = generateTOTPSecret().base32;
     const otpCode = generateTOTPCode(totpSecret);
 
-    const user = new User({
-      name,
-      email,
-      password, // Le model s'occupe du hashing via pre('save')
-      totpSecret,
-      isVerified: false
-    });
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        password, // Le model s'occupe du hashing via pre('save')
+        totpSecret,
+        isVerified: false
+      });
+    } else {
+      // Reprendre un compte non-vérifié (permet de corriger une erreur d'email précédente)
+      user.name = name;
+      user.password = password;
+      user.totpSecret = totpSecret;
+    }
 
     await user.save();
 
@@ -43,9 +50,10 @@ const registerUser = async (req, res, next) => {
         `Bonjour ${name},\n\nVoici votre code de vérification : ${otpCode}\n\nCe code est valable pour une session locale.`
       );
     } catch (emailError) {
-      await User.deleteOne({ _id: user._id });
+      // On ne supprime plus l'utilisateur ici, car la nouvelle logique au-dessus
+      // permet de retenter l'inscription (elle mettra à jour l'entrée non-vérifiée).
       res.status(500);
-      throw new Error("L'envoi de l'email de vérification a échoué. Veuillez vérifier les configurations SMTP ou réessayer.");
+      throw new Error("Compte créé mais l'envoi du code a échoué. Veuillez vérifier vos paramètres SMTP ou réessayer de vous inscrire avec le même email.");
     }
 
     const token = generateToken(user._id);
