@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Product = require('../models/Product');
 const { generateToken, generateTOTPSecret, generateTOTPCode, sendEmail } = require('../utils/auth');
 
 // Helper: champs publics du user
@@ -182,9 +183,74 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+// ============================================================
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// ============================================================
+const updateProfile = async (req, res, next) => {
+  const { name, avatar, whatsapp, bio } = req.body;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404);
+      throw new Error('Utilisateur non trouve');
+    }
+    
+    if (name) user.name = name;
+    if (avatar) user.avatar = avatar;
+    if (whatsapp) user.whatsapp = whatsapp;
+    if (bio) user.bio = bio;
+    
+    const updatedUser = await user.save();
+    
+    const userResponse = {};
+    publicUserFields.forEach(field => {
+      if (updatedUser[field] !== undefined) {
+        userResponse[field] = updatedUser[field];
+      }
+    });
+
+    res.json(userResponse);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ============================================================
+// @desc    Get user profile
+// @route   GET /api/auth/profile/:id
+// ============================================================
+const getProfile = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      res.status(404);
+      throw new Error('Utilisateur non trouve');
+    }
+
+    const userResponse = {};
+    publicUserFields.forEach(field => {
+      if (user[field] !== undefined) {
+        userResponse[field] = user[field];
+      }
+    });
+
+    const products = await Product.find({ seller: user._id }).sort({ createdAt: -1 });
+
+    res.json({
+      user: userResponse,
+      products
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   verifyEmail,
-  resendOTP
+  resendOTP,
+  updateProfile,
+  getProfile
 };

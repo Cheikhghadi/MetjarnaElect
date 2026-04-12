@@ -53,3 +53,4 @@ coverage/
 cleanup.js
 test_rating.js
 r.txt
+.env.example
