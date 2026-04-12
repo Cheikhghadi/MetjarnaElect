@@ -1,10 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
-const dotenv = require('dotenv');
 const socketHandler = require('./socketHandler');
 
 const authRoutes = require('./routes/authRoutes');
@@ -15,8 +15,6 @@ const messageRoutes = require('./routes/messageRoutes');
 const likeRoutes = require('./routes/likeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const { apiLimiter } = require('./middleware/securityMiddleware');
-
-dotenv.config();
 
 function assertProductionSecrets() {
   if (process.env.NODE_ENV !== 'production') return;
