@@ -30,7 +30,7 @@ const verifyTOTPCode = (secret, token) => {
 // Send Email (credentials uniquement via SMTP_USER / SMTP_PASS — jamais en dur dans le code)
 const sendEmail = async (to, subject, text) => {
   const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const pass = process.env.SMTP_PASS ? process.env.SMTP_PASS.replace(/\s/g, '') : '';
 
   if (!user || !pass || user === 'votre-email@gmail.com') {
     const msg = 'SMTP_USER ou SMTP_PASS manquant : impossible d\'envoyer l\'email';
@@ -44,12 +44,12 @@ const sendEmail = async (to, subject, text) => {
     return;
   }
 
-  const port = Number(process.env.SMTP_PORT) || 587;
-  const secure = port === 465;
-
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: { user, pass },
+    connectionTimeout: 10000,  // 10s max pour se connecter
+    greetingTimeout: 10000,    // 10s max pour le handshake
+    socketTimeout: 15000,      // 15s max pour l'envoi
   });
 
   const mailOptions = {
@@ -59,8 +59,16 @@ const sendEmail = async (to, subject, text) => {
     text,
   };
 
+  // Timeout global de 20s pour éviter que le serveur se bloque indéfiniment
+  const sendWithTimeout = () => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('SMTP_TIMEOUT: envoi email trop long')), 20000);
+    transporter.sendMail(mailOptions)
+      .then((info) => { clearTimeout(timer); resolve(info); })
+      .catch((err) => { clearTimeout(timer); reject(err); });
+  });
+
   try {
-    await transporter.sendMail(mailOptions);
+    await sendWithTimeout();
     console.log(`Email sent to ${to}`);
   } catch (error) {
     console.error('SMTP Error Detailed:', {
