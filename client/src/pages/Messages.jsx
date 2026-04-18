@@ -113,6 +113,31 @@ const Messages = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dzvj0qzsc'; // Placeholder or env
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'zenshop_unsigned'; 
+
+  const uploadToCloudinary = async (file, resourceType = 'auto') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+
+    try {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (data.secure_url) {
+        return data.secure_url;
+      }
+      throw new Error(data.error?.message || 'Upload failed');
+    } catch (err) {
+      console.error('Cloudinary Error:', err);
+      throw err;
+    }
+  };
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const fileInputRef = useRef();
@@ -308,27 +333,15 @@ const Messages = () => {
     try {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
-      let content;
+      const url = await uploadToCloudinary(file);
       
+      let content;
       if (isImage) {
-        const compressed = await compressImage(file);
-        content = `[IMAGE]${compressed}`;
+        content = `[IMAGE]${url}`;
       } else if (isVideo) {
-        const reader = new FileReader();
-        const readPromise = new Promise((resolve) => {
-          reader.onloadend = () => resolve(reader.result);
-        });
-        reader.readAsDataURL(file);
-        const result = await readPromise;
-        content = `[VIDEO]${result}`;
+        content = `[VIDEO]${url}`;
       } else {
-        const reader = new FileReader();
-        const readPromise = new Promise((resolve) => {
-          reader.onloadend = () => resolve(reader.result);
-        });
-        reader.readAsDataURL(file);
-        const result = await readPromise;
-        content = `[FILE:${file.name}]${result}`;
+        content = `[FILE:${file.name}]${url}`;
       }
 
       await api.post(`/messages/${selectedUser._id}`, { content });
@@ -370,37 +383,28 @@ const Messages = () => {
 
         mediaRecorderRef.current.onstop = async () => {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          if (audioBlob.size > 10 * 1024 * 1024) {
-            addToast("Enregistrement trop long", "warning");
-            return;
-          }
-
           setIsUploading(true);
-          const reader = new FileReader();
-          reader.readAsDataURL(audioBlob);
-          reader.onloadend = async () => {
-            const base64Audio = reader.result;
-            const content = `[AUDIO]${base64Audio}`;
+          try {
+            const url = await uploadToCloudinary(audioBlob, 'video'); // Audio uses 'video' or 'auto'
+            const content = `[AUDIO]${url}`;
             
-            try {
-              await api.post(`/messages/${selectedUser._id}`, { content });
-              const msgData = {
-                threadId,
-                sender: user._id,
-                senderName: user.name,
-                content,
-                createdAt: new Date().toISOString()
-              };
-              setMessages(prev => [...prev, msgData]);
-              socketRef.current?.emit('send_message', msgData);
-              fetchInbox();
-              addToast("Note vocale envoyée", "success");
-            } catch (err) {
-              addToast("Erreur lors de l'envoi de la note vocale", 'error');
-            } finally {
-              setIsUploading(false);
-            }
-          };
+            await api.post(`/messages/${selectedUser._id}`, { content });
+            const msgData = {
+              threadId,
+              sender: user._id,
+              senderName: user.name,
+              content,
+              createdAt: new Date().toISOString()
+            };
+            setMessages(prev => [...prev, msgData]);
+            socketRef.current?.emit('send_message', msgData);
+            fetchInbox();
+            addToast("Note vocale envoyée", "success");
+          } catch (err) {
+            addToast("Erreur lors de l'envoi de la note vocale", 'error');
+          } finally {
+            setIsUploading(false);
+          }
           stream.getTracks().forEach(track => track.stop());
         };
 
