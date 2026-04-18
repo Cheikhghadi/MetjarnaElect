@@ -18,12 +18,12 @@ const EditProfile = () => {
         if (userStr) {
           const user = JSON.parse(userStr);
           // If in mock mode or similar, we might need a real fetch
-          const { data } = await api.get(`/auth/user/${user._id}`);
+          const { data } = await api.get(`/auth/profile/${user._id}`);
           setFormData({
-            name: data.name || '',
-            avatar: data.avatar || '',
-            bio: data.bio || '',
-            whatsapp: data.whatsapp || ''
+            name: data.user.name || '',
+            avatar: data.user.avatar || '',
+            bio: data.user.bio || '',
+            whatsapp: data.user.whatsapp || ''
           });
         }
       } catch (err) {

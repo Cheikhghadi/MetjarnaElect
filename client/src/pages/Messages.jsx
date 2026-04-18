@@ -84,8 +84,8 @@ const Messages = () => {
 
       let otherUser;
       try {
-        const res = await api.get(`/auth/user/${otherUserId}`);
-        otherUser = res.data;
+        const res = await api.get(`/auth/profile/${otherUserId}`);
+        otherUser = res.data.user;
       } catch (e) {
         otherUser = { _id: otherUserId, name: 'Utilisateur' };
       }
