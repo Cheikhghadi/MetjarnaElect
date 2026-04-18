@@ -30,13 +30,14 @@ const VoicePlayer = ({ src }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const audioRef = useRef(new Audio(src));
+  const audioRef = useRef(null);
 
   useEffect(() => {
-    const audio = audioRef.current;
+    const audio = new Audio(src);
+    audioRef.current = audio;
     
     const updateProgress = () => {
-      setProgress((audio.currentTime / audio.duration) * 100);
+      setProgress((audio.currentTime / audio.duration) * 100 || 0);
     };
     
     const onLoadedMetadata = () => {
@@ -61,10 +62,11 @@ const VoicePlayer = ({ src }) => {
   }, [src]);
 
   const togglePlay = () => {
+    if (!audioRef.current) return;
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(e => console.error("Playback failed", e));
     }
     setIsPlaying(!isPlaying);
   };
@@ -110,6 +112,7 @@ const Messages = () => {
   const { t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const fileInputRef = useRef();
@@ -295,6 +298,13 @@ const Messages = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (file.size > 10 * 1024 * 1024) {
+      addToast("Le fichier est trop volumineux (max 10MB)", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    setIsUploading(true);
     try {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
@@ -333,13 +343,22 @@ const Messages = () => {
       setMessages(prev => [...prev, msgData]);
       socketRef.current?.emit('send_message', msgData);
       fetchInbox();
+      addToast("Fichier envoyé !", "success");
     } catch (err) {
+      console.error(err);
       addToast("Erreur lors de l'envoi du fichier", 'error');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   const toggleRecording = async () => {
     if (!isRecording) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return addToast("Votre navigateur ne supporte pas l'enregistrement vocal", "error");
+      }
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorderRef.current = new MediaRecorder(stream);
@@ -351,6 +370,12 @@ const Messages = () => {
 
         mediaRecorderRef.current.onstop = async () => {
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          if (audioBlob.size > 10 * 1024 * 1024) {
+            addToast("Enregistrement trop long", "warning");
+            return;
+          }
+
+          setIsUploading(true);
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
           reader.onloadend = async () => {
@@ -369,8 +394,11 @@ const Messages = () => {
               setMessages(prev => [...prev, msgData]);
               socketRef.current?.emit('send_message', msgData);
               fetchInbox();
+              addToast("Note vocale envoyée", "success");
             } catch (err) {
               addToast("Erreur lors de l'envoi de la note vocale", 'error');
+            } finally {
+              setIsUploading(false);
             }
           };
           stream.getTracks().forEach(track => track.stop());
@@ -383,12 +411,15 @@ const Messages = () => {
           setRecordingTime(prev => prev + 1);
         }, 1000);
       } catch (err) {
+        console.error(err);
         addToast("Accès au micro refusé", 'error');
       }
     } else {
-      clearInterval(recordingInterval.current);
+      if (recordingInterval.current) clearInterval(recordingInterval.current);
       setIsRecording(false);
-      mediaRecorderRef.current?.stop();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
     }
   };
 
@@ -528,8 +559,29 @@ const Messages = () => {
       <div className="glass" style={{ 
         display: isMobile && !selectedUser ? 'none' : 'flex', 
         flexDirection: 'column', 
-        overflow: 'hidden' 
+        overflow: 'hidden',
+        position: 'relative'
       }}>
+        {isUploading && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 100,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1rem',
+            backdropFilter: 'blur(4px)'
+          }}>
+            <div className="spinner"></div>
+            <p style={{ color: 'white', fontWeight: '700' }}>Envoi en cours...</p>
+          </div>
+        )}
         {selectedUser ? (
           <>
             {/* Header */}
