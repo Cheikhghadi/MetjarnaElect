@@ -227,11 +227,20 @@ const Messages = () => {
 
     try {
       const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
       let content;
       
       if (isImage) {
         const compressed = await compressImage(file);
         content = `[IMAGE]${compressed}`;
+      } else if (isVideo) {
+        const reader = new FileReader();
+        const readPromise = new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+        });
+        reader.readAsDataURL(file);
+        const result = await readPromise;
+        content = `[VIDEO]${result}`;
       } else {
         const reader = new FileReader();
         const readPromise = new Promise((resolve) => {
@@ -479,6 +488,8 @@ const Messages = () => {
                 >
                   {msg.content.startsWith('[IMAGE]') ? (
                     <img src={msg.content.replace('[IMAGE]', '')} alt="Attachement" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x300/1e1b4b/8b5cf6?text=Image+Cassée'; }} style={{ maxWidth: '100%', borderRadius: '12px', marginTop: '0.5rem' }} />
+                  ) : msg.content.startsWith('[VIDEO]') ? (
+                    <video controls src={msg.content.replace('[VIDEO]', '')} style={{ maxWidth: '100%', borderRadius: '12px', marginTop: '0.5rem' }} />
                   ) : msg.content.startsWith('[FILE:') ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '10px', cursor: 'pointer' }}>
                       <FileText size={20} />
