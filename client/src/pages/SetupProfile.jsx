@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const SetupProfile = () => {
   const [formData, setFormData] = useState({ name: '', avatar: '', whatsapp: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     // Check if user is already setup
@@ -27,10 +29,10 @@ const SetupProfile = () => {
       const { data } = await api.put('/auth/profile', formData);
       localStorage.setItem('user', JSON.stringify(data));
       window.dispatchEvent(new Event('userStateChange'));
-      addToast('Profil configuré avec succès !');
+      addToast(t('auth.setup_success') || 'Profil configuré avec succès !');
       navigate('/dashboard');
     } catch (err) {
-      addToast(err.response?.data?.message || 'Erreur lors de la configuration', 'error');
+      addToast(err.response?.data?.message || t('auth.setup_error') || 'Erreur lors de la configuration', 'error');
     } finally {
       setLoading(false);
     }
@@ -40,7 +42,7 @@ const SetupProfile = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        return addToast('L\'image doit faire moins de 2Mo', 'error');
+        return addToast(t('profile.image_limit'), 'error');
       }
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -57,9 +59,9 @@ const SetupProfile = () => {
 
       <div className="auth-card glass animate-fade" style={{ maxWidth: '420px', padding: '3rem', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.04em', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Finaliser le profil</h1>
+          <h1 style={{ fontSize: '2rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.04em', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('auth.setup_title')}</h1>
           <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: '500' }}>
-            Dites-nous qui vous êtes
+            {t('auth.setup_subtitle')}
           </p>
         </div>
         
@@ -81,15 +83,15 @@ const SetupProfile = () => {
                 style={{ display: 'none' }}
               />
             </label>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>Photo de profil (Optionnel)</span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>{t('auth.avatar_label')}</span>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Nom complet (Obligatoire)</label>
+            <label className="form-label">{t('auth.name_setup')}</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Ex: Cheikh"
+              placeholder={t('auth.name_placeholder')}
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
@@ -97,18 +99,18 @@ const SetupProfile = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Numéro WhatsApp (Optionnel mais recommandé)</label>
+            <label className="form-label">{t('auth.whatsapp_setup')}</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Ex: 222..."
+              placeholder="Ex: +222..."
               value={formData.whatsapp}
               onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
             />
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading || !formData.name}>
-            {loading ? 'Enregistrement...' : 'Commencer'}
+            {loading ? t('auth.finishing') : t('auth.finish')}
           </button>
         </form>
       </div>

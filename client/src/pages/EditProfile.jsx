@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { User as UserIcon, Camera, Save, ArrowLeft } from 'lucide-react';
 
 const EditProfile = () => {
@@ -10,6 +11,7 @@ const EditProfile = () => {
   const [fetching, setFetching] = useState(true);
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,7 +30,7 @@ const EditProfile = () => {
         }
       } catch (err) {
         console.error('Error fetching profile', err);
-        addToast('Erreur lors de la récupération du profil', 'error');
+        addToast(t('profile.loading_error'), 'error');
       } finally {
         setFetching(false);
       }
@@ -43,10 +45,10 @@ const EditProfile = () => {
       const { data } = await api.put('/auth/profile', formData);
       localStorage.setItem('user', JSON.stringify(data));
       window.dispatchEvent(new Event('userStateChange'));
-      addToast('Profil mis à jour !');
+      addToast(t('profile.update_success'));
       navigate(`/profile/${data._id}`);
     } catch (err) {
-      addToast(err.response?.data?.message || 'Erreur lors de la mise à jour', 'error');
+      addToast(err.response?.data?.message || t('profile.update_error'), 'error');
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ const EditProfile = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        return addToast('L\'image doit faire moins de 2Mo', 'error');
+        return addToast(t('profile.image_limit'), 'error');
       }
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -66,7 +68,7 @@ const EditProfile = () => {
     }
   };
 
-  if (fetching) return <div className="container" style={{ paddingTop: '120px', textAlign: 'center' }}>Chargement...</div>;
+  if (fetching) return <div className="container" style={{ paddingTop: '120px', textAlign: 'center' }}>{t('profile.loading')}</div>;
 
   return (
     <div className="container" style={{ paddingTop: '120px', paddingBottom: '5rem', maxWidth: '600px' }}>
@@ -74,11 +76,11 @@ const EditProfile = () => {
         onClick={() => navigate(-1)} 
         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', marginBottom: '2rem', fontWeight: '700' }}
       >
-        <ArrowLeft size={18} /> Retour
+        <ArrowLeft size={18} /> {t('profile.back')}
       </button>
 
       <div className="glass" style={{ padding: '3rem', borderRadius: '24px' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", marginBottom: '2rem' }}>Modifier le profil</h1>
+        <h1 style={{ fontSize: '2rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", marginBottom: '2rem' }}>{t('profile.edit')}</h1>
         
         <form onSubmit={handleSubmit}>
           {/* Avatar Section */}
@@ -130,7 +132,7 @@ const EditProfile = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Nom complet</label>
+            <label className="form-label">{t('auth.name')}</label>
             <input 
               type="text" 
               className="form-input" 
@@ -141,33 +143,33 @@ const EditProfile = () => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Bio (Dites-en un peu plus sur vous)</label>
+            <label className="form-label">{t('profile.bio_label')}</label>
             <textarea 
               className="form-input"
               rows="3"
               style={{ resize: 'none' }}
               value={formData.bio}
               onChange={(e) => setFormData({...formData, bio: e.target.value})}
-              placeholder="Vendeur passionné, collectionneur..."
+              placeholder={t('profile.bio_placeholder')}
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Numéro WhatsApp (Format international)</label>
+            <label className="form-label">{t('profile.whatsapp_label')}</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Ex: 222..."
+              placeholder="Ex: +222..."
               value={formData.whatsapp}
               onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
             />
           </div>
           
           <button type="submit" className="btn-primary" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
-            {loading ? 'Enregistrement...' : (
+            {loading ? t('profile.saving') : (
               <>
                 <Save size={20} />
-                Sauvegarder les modifications
+                {t('profile.save')}
               </>
             )}
           </button>

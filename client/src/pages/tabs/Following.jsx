@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import ProductCard from '../../components/ProductCard';
 import SkeletonCard from '../../components/SkeletonCard';
+import { useLanguage } from '../../context/LanguageContext';
 
 const Following = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchFollowed = async () => {
@@ -37,7 +39,7 @@ const Following = () => {
 
   return (
     <div>
-      <h2 style={{ marginBottom: '1.5rem' }}>Articles des vendeurs suivis</h2>
+      <h2 style={{ marginBottom: '1.5rem' }}>{t('following_tab.title')}</h2>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
         {products.map(product => (
           <ProductCard key={product._id} product={product} />
@@ -45,8 +47,8 @@ const Following = () => {
       </div>
       {products.length === 0 && (
         <div className="glass" style={{ padding: '3rem', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-muted)' }}>Vous ne suivez aucun vendeur ou ils n'ont pas encore de produits.</p>
-          <p style={{ marginTop: '1rem' }}>Explorez l'onglet <strong>Découvrir</strong> pour trouver des vendeurs !</p>
+          <p style={{ color: 'var(--text-muted)' }}>{t('following_tab.empty')}</p>
+          <p style={{ marginTop: '1rem' }}>{t('following_tab.explore')}</p>
         </div>
       )}
     </div>

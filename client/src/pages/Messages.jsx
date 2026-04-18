@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Send, 
   Plus, 
@@ -35,6 +36,7 @@ const Messages = () => {
   const [showAttachments, setShowAttachments] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { addToast } = useToast();
+  const { t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const fileInputRef = useRef();
@@ -169,7 +171,7 @@ const Messages = () => {
       setNewMessage('');
       fetchInbox();
     } catch (err) {
-      addToast("Erreur d'envoi", 'error');
+      addToast(t('messages.error_send') || "Erreur d'envoi", 'error');
     }
   };
 
@@ -279,7 +281,7 @@ const Messages = () => {
       {/* Sidebar - Inbox */}
       <div className="glass" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>Messages</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('messages.inbox')}</h2>
         </div>
         <div className="inbox-scroll" style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
           {inbox.map(item => (
@@ -320,7 +322,7 @@ const Messages = () => {
               </div>
             </div>
           ))}
-          {inbox.length === 0 && <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-dim)' }}>Aucun message</p>}
+          {inbox.length === 0 && <p style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-dim)' }}>{t('messages.no_messages')}</p>}
         </div>
       </div>
 
@@ -337,7 +339,7 @@ const Messages = () => {
               </div>
               <div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: '800' }}>{selectedUser.name}</h3>
-                <p style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: '700' }}>• En ligne</p>
+                <p style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: '700' }}>• {t('messages.online') || 'En ligne'}</p>
               </div>
             </div>
             
@@ -458,7 +460,7 @@ const Messages = () => {
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder={isRecording ? 'Enregistrement en cours...' : 'Tapez votre message...'} 
+                    placeholder={isRecording ? t('messages.recording') : t('messages.msg_placeholder')} 
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     disabled={isRecording}
@@ -502,15 +504,15 @@ const Messages = () => {
               <MessageSquare size={48} strokeWidth={1.5} />
             </div>
             <div>
-              <p style={{ fontWeight: '800', fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Vos messages</p>
-              <p style={{ color: 'var(--text-dim)', maxWidth: '300px', lineHeight: '1.6' }}>Sélectionnez une conversation pour commencer à discuter avec la communauté.</p>
+              <p style={{ fontWeight: '800', fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('messages.title_empty')}</p>
+              <p style={{ color: 'var(--text-dim)', maxWidth: '300px', lineHeight: '1.6' }}>{t('messages.select_conv')}</p>
             </div>
             <button 
               onClick={() => navigate('/dashboard')}
               className="btn-primary" 
               style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', fontSize: '0.9rem' }}
             >
-              Découvrir des pépites
+              {t('messages.discover_btn') || 'Découvrir des pépites'}
             </button>
           </div>
         )}

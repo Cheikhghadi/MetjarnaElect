@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../utils/api';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Image as ImageIcon, Upload, X, MessageCircle } from 'lucide-react';
 
 const AddProduct = () => {
@@ -12,6 +13,7 @@ const AddProduct = () => {
   const { id } = useParams();
   const fileInputRef = React.useRef();
   const { addToast } = useToast();
+  const { t } = useLanguage();
   const user = JSON.parse(localStorage.getItem('user'));
   const [whatsapp, setWhatsapp] = useState(user?.whatsapp || '');
 
@@ -165,7 +167,7 @@ const AddProduct = () => {
     <div style={{ maxWidth: '700px', margin: '0 auto', paddingBottom: '4rem' }}>
       <div className="glass animate-fade" style={{ padding: '3.5rem', background: 'var(--card-bg)', border: '1px solid var(--border)' }}>
         <h2 className="text-gradient" style={{ marginBottom: '2rem', fontWeight: '1000', fontSize: '2.5rem', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.04em' }}>
-          {id ? 'Refine Listing' : 'Sell Your Item'}
+          {id ? t('add_product.title_edit') : t('add_product.title_add')}
         </h2>
         
         <div style={{ 
@@ -181,8 +183,8 @@ const AddProduct = () => {
                <MessageCircle size={22} />
             </div>
             <div>
-              <p style={{ fontSize: '1rem', color: 'var(--text-main)', margin: 0, fontWeight: '800' }}>Buyer Contact (WhatsApp)</p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: 0, marginTop: '2px', fontWeight: '500' }}>This number will be visible to potential buyers.</p>
+              <p style={{ fontSize: '1rem', color: 'var(--text-main)', margin: 0, fontWeight: '800' }}>{t('add_product.contact_title')}</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: 0, marginTop: '2px', fontWeight: '500' }}>{t('add_product.contact_desc')}</p>
             </div>
           </div>
           
@@ -202,7 +204,7 @@ const AddProduct = () => {
         <form onSubmit={handleSubmit}>
           {/* Image Upload Area */}
           <div className="form-group" style={{ marginBottom: '2rem' }}>
-            <label className="form-label" style={{ fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>Visual Gallery</label>
+            <label className="form-label" style={{ fontWeight: '700', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{t('add_product.gallery')}</label>
             <div 
               onClick={(e) => {
                 if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'path' && e.target.tagName !== 'svg') {
@@ -250,8 +252,8 @@ const AddProduct = () => {
               ) : (
                 <div style={{ textAlign: 'center', color: 'var(--text-dim)' }}>
                   <div style={{ marginBottom: '1rem', color: 'var(--primary)', opacity: 0.8 }}><Upload size={48} /></div>
-                  <p style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>Add Gallery Images</p>
-                  <p style={{ fontSize: '0.8rem', fontWeight: '500' }}>Drop files here or click to browse</p>
+                  <p style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>{t('add_product.add_images')}</p>
+                  <p style={{ fontSize: '0.8rem', fontWeight: '500' }}>{t('add_product.drop_images')}</p>
                 </div>
               )}
             </div>
@@ -265,29 +267,29 @@ const AddProduct = () => {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Catégorie</label>
+            <label className="form-label">{t('add_product.category')}</label>
             <select 
               className="form-input" 
               value={formData.category} 
               onChange={e => setFormData({...formData, category: e.target.value})}
               style={{ WebkitAppearance: 'none' }}
             >
-              <option value="Électronique">Électronique</option>
-              <option value="Vêtements">Vêtements</option>
-              <option value="Maison">Maison</option>
-              <option value="Services">Services</option>
-              <option value="Autres">Autres</option>
+              <option value="Électronique">{t('cat.Électronique')}</option>
+              <option value="Vêtements">{t('cat.Vêtements')}</option>
+              <option value="Maison">{t('cat.Maison')}</option>
+              <option value="Services">{t('cat.Services')}</option>
+              <option value="Autres">{t('cat.Autres')}</option>
             </select>
           </div>
           <div className="form-group">
-            <label className="form-label">Nom du produit</label>
+            <label className="form-label">{t('add_product.name')}</label>
             <input 
               type="text" className="form-input" required
               value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Description</label>
+            <label className="form-label">{t('add_product.desc')}</label>
             <textarea 
               className="form-input" required rows="4" style={{ resize: 'none' }}
               value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})}
@@ -295,14 +297,14 @@ const AddProduct = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Prix (€)</label>
+              <label className="form-label">{t('add_product.price_label')}</label>
               <input 
                 type="number" className="form-input" required
                 value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})}
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Livraison (€, 0 = Gratuit)</label>
+              <label className="form-label">{t('add_product.delivery_label')}</label>
               <input 
                 type="number" className="form-input"
                 value={formData.delivery} onChange={e => setFormData({...formData, delivery: e.target.value})}
@@ -310,7 +312,7 @@ const AddProduct = () => {
             </div>
           </div>
           <button type="submit" className="btn-primary" disabled={loading} style={{ marginTop: '1rem' }}>
-            {loading ? 'Enregistrement...' : (id ? 'Mettre à jour' : 'Publier l\'article')}
+            {loading ? t('add_product.saving') : (id ? t('add_product.update') : t('add_product.publish'))}
           </button>
         </form>
       </div>

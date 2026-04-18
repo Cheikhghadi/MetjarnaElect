@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
@@ -29,7 +30,10 @@ const ProductCard = ({ product }) => {
   const { addToast } = useToast();
   const { t } = useLanguage();
 
-  React.useEffect(() => {
+  const sellerId = product.seller?._id || product.seller;
+  const sellerName = product.seller?.name || 'Vendeur';
+
+  useEffect(() => {
     const handleUserChange = () => {
       setUser(JSON.parse(localStorage.getItem('user')));
     };
@@ -38,7 +42,7 @@ const ProductCard = ({ product }) => {
   }, []);
 
   // Social status is now provided by the backend in the product object
-  React.useEffect(() => {
+  useEffect(() => {
     setIsFollowing(product.isFollowing || false);
     setLiked(product.isLiked || false);
     setRating(Number(product.avgRating) || 0);
@@ -57,7 +61,7 @@ const ProductCard = ({ product }) => {
 
   const handleFollow = async () => {
     try {
-      const { data } = await api.post(`/follow/${product.seller._id}`);
+      const { data } = await api.post(`/follow/${sellerId}`);
       setIsFollowing(data.following);
     } catch (err) {
       addToast('Erreur lors du suivi', 'error');
@@ -96,7 +100,7 @@ const ProductCard = ({ product }) => {
     }
   };
 
-  const isOwner = user && product.seller._id === user._id;
+  const isOwner = user && sellerId === user._id;
 
   return (
     <div className="glass animate-fade" style={{ 
@@ -127,7 +131,7 @@ const ProductCard = ({ product }) => {
       {/* Social Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div 
-          onClick={() => navigate(`/profile/${product.seller._id}`)}
+          onClick={() => navigate(`/profile/${sellerId}`)}
           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
         >
           <div style={{ 
@@ -138,23 +142,23 @@ const ProductCard = ({ product }) => {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            fontSize: '1.25rem',
-            color: 'var(--primary)'
+            fontSize: '1.25rem', 
+            zIndex: 1
           }}>
-            {product.seller.avatar ? <img src={product.seller.avatar} style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}} loading="lazy" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/100x100/8b5cf6/ffffff?text=U'; }} /> : <UserIcon size={20} />}
+            {product.seller?.avatar ? <img src={product.seller.avatar} style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}} /> : <UserIcon size={20} style={{ color: 'var(--primary)', opacity: 0.5 }} />}
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <p style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-main)' }}>{product.seller.name}</p>
-              {product.seller.role === 'admin' || rating > 4.5 && (
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <p style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-main)' }}>{sellerName}</p>
+              {product.seller?.role === 'admin' && (
                 <ShieldCheck size={14} style={{ color: 'var(--primary)' }} />
               )}
             </div>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{product.seller.followersCount || 0} {t('product.followers')}</p>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{product.seller?.followersCount || 0} {t('product.followers')}</p>
           </div>
         </div>
         
-        {user && product.seller._id !== user._id && (
+        {user && sellerId !== user._id && (
           <button 
             onClick={handleFollow}
             style={{ 
@@ -254,7 +258,7 @@ const ProductCard = ({ product }) => {
                 e.stopPropagation();
                 if (!user) {
                   addToast('Connectez-vous pour noter', 'error');
-                } else if (user._id === product.seller._id) {
+                } else if (user._id === sellerId) {
                   addToast('Impossible de noter votre propre article', 'info');
                 } else {
                   handleRate(star);
@@ -271,7 +275,7 @@ const ProductCard = ({ product }) => {
         
         <div style={{ display: 'flex', gap: '0.85rem' }}>
           <button 
-            onClick={() => navigate(`/messages?user=${product.seller._id}`)}
+            onClick={() => navigate(`/messages?user=${sellerId}`)}
             style={{ background: 'transparent', color: 'var(--text-dim)', padding: 0, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-dim)'}
@@ -364,7 +368,7 @@ const ProductCard = ({ product }) => {
               WhatsApp
             </a>
             <button 
-              onClick={() => navigate(`/messages?user=${product.seller._id}`)}
+              onClick={() => navigate(`/messages?user=${sellerId}`)}
               className="btn-primary" 
               style={{ 
                  height: '46px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center',

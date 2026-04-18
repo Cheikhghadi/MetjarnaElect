@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import api from '../utils/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const ResetPassword = () => {
   const location = useLocation();
@@ -14,11 +15,12 @@ const ResetPassword = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      return setError('Les mots de passe ne correspondent pas');
+      return setError(t('auth.pass_match_error'));
     }
     
     setLoading(true);
@@ -30,12 +32,12 @@ const ResetPassword = () => {
         code: formData.code,
         password: formData.password
       });
-      setMessage('Mot de passe mis à jour ! Redirection...');
+      setMessage(t('auth.reset_success'));
       setTimeout(() => {
         navigate('/login');
       }, 2000);
     } catch (err) {
-      setError(err.apiMessage || err.response?.data?.message || 'Code invalide ou expiré');
+      setError(err.apiMessage || err.response?.data?.message || t('auth.reset_error'));
     } finally {
       setLoading(false);
     }
@@ -49,9 +51,9 @@ const ResetPassword = () => {
       <div className="auth-card glass animate-fade" style={{ maxWidth: '420px', padding: '3rem', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ width: '48px', height: '48px', margin: '0 auto 1.25rem', borderRadius: '14px', background: 'var(--gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '900', fontSize: '1.5rem', boxShadow: '0 8px 25px rgba(139, 92, 246, 0.4)' }}>Z</div>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.04em', color: 'var(--text-main)', marginBottom: '0.5rem' }}>Nouveau Pass<span style={{ color: 'var(--primary)' }}>.</span></h1>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: '900', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.04em', color: 'var(--text-main)', marginBottom: '0.5rem' }}>{t('auth.reset_title')}<span style={{ color: 'var(--primary)' }}>.</span></h1>
           <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', fontWeight: '500' }}>
-            Entrez le code reçu et votre nouveau mot de passe
+            {t('auth.reset_subtitle')}
           </p>
         </div>
         
@@ -69,7 +71,7 @@ const ResetPassword = () => {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">{t('auth.email')}</label>
             <input 
               type="email" 
               className="form-input" 
@@ -79,11 +81,11 @@ const ResetPassword = () => {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Code de vérification</label>
+            <label className="form-label">{t('auth.code_label')}</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="6 chiffres"
+              placeholder={t('auth.code_placeholder')}
               maxLength="6"
               value={formData.code}
               onChange={(e) => setFormData({...formData, code: e.target.value})}
@@ -91,7 +93,7 @@ const ResetPassword = () => {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Nouveau mot de passe</label>
+            <label className="form-label">{t('auth.new_password')}</label>
             <input 
               type="password" 
               className="form-input" 
@@ -102,7 +104,7 @@ const ResetPassword = () => {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Confirmer le mot de passe</label>
+            <label className="form-label">{t('auth.confirm_password')}</label>
             <input 
               type="password" 
               className="form-input" 
@@ -113,7 +115,7 @@ const ResetPassword = () => {
             />
           </div>
           <button type="submit" className="btn-primary" style={{ height: '52px', marginTop: '1rem' }} disabled={loading}>
-            {loading ? 'Mise à jour...' : 'Réinitialiser'}
+            {loading ? t('auth.updating') : t('auth.reset_btn')}
           </button>
         </form>
       </div>

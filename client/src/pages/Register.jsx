@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -9,6 +10,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     api.get('/health').catch(() => {});
@@ -20,10 +22,10 @@ const Register = () => {
     setError('');
     try {
       await api.post('/auth/register', formData);
-      addToast('Compte créé ! Veuillez vérifier votre email.');
+      addToast(t('auth.account_created') || 'Compte créé ! Veuillez vérifier votre email.');
       navigate('/verify', { state: { email: formData.email } });
     } catch (err) {
-      addToast(err.apiMessage || err.response?.data?.message || 'Une erreur est survenue', 'error');
+      addToast(err.apiMessage || err.response?.data?.message || t('auth.error_generic') || 'Une erreur est survenue', 'error');
     } finally {
       setLoading(false);
     }
@@ -50,26 +52,26 @@ const Register = () => {
             fontSize: '1.75rem', 
             boxShadow: '0 12px 30px rgba(139, 92, 246, 0.4)' 
           }}>Z</div>
-          <h1 className="auth-title">Create Account</h1>
+          <h1 className="auth-title">{t('auth.register_title')}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>
-            Join the exclusive ZenShop community
+            {t('auth.register_subtitle')}
           </p>
         </div>
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Full Name</label>
+            <label className="form-label">{t('auth.name')}</label>
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Votre nom complet"
+              placeholder={t('auth.name_placeholder')}
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
               required
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">{t('auth.email')}</label>
             <input 
               type="email" 
               className="form-input" 
@@ -80,7 +82,7 @@ const Register = () => {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label">{t('auth.password')}</label>
             <input 
               type="password" 
               className="form-input" 
@@ -91,12 +93,12 @@ const Register = () => {
             />
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Creating Profile...' : 'Get Started'}
+            {loading ? t('auth.creating') : t('auth.create_account')}
           </button>
         </form>
         
         <p style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-dim)' }}>
-          Déjà un compte ? <Link to="/login" style={{ color: 'var(--primary)', fontWeight: '600' }}>Se connecter</Link>
+          {t('auth.already_have')} <Link to="/login" style={{ color: 'var(--primary)', fontWeight: '600' }}>{t('auth.log_in_link')}</Link>
         </p>
       </div>
     </div>

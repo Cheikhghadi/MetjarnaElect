@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../utils/api';
+import { useLanguage } from '../context/LanguageContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -50,9 +52,9 @@ const Login = () => {
             fontSize: '1.75rem', 
             boxShadow: '0 12px 30px rgba(139, 92, 246, 0.4)' 
           }}>Z</div>
-          <h1 className="auth-title">ZenShop</h1>
+          <h1 className="auth-title">{t('discover.title_zenshop')}</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '600' }}>
-            Elevate your shopping experience
+            {t('auth.subtitle')}
           </p>
         </div>
         
@@ -64,7 +66,7 @@ const Login = () => {
         
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">{t('auth.email')}</label>
             <input 
               type="email" 
               className="form-input" 
@@ -75,7 +77,7 @@ const Login = () => {
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label">{t('auth.password')}</label>
             <input 
               type="password" 
               className="form-input" 
@@ -86,15 +88,15 @@ const Login = () => {
             />
           </div>
           <div style={{ textAlign: 'right', marginBottom: '1.5rem', marginTop: '-0.5rem' }}>
-            <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600' }}>Mot de passe oublié ?</Link>
+            <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600' }}>{t('auth.forgot')}</Link>
           </div>
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? t('auth.signing_in') : t('auth.signin')}
           </button>
         </form>
         
         <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          Pas encore de compte ? <Link to="/register" style={{ color: 'var(--primary)', fontWeight: '700' }}>Créer un profil</Link>
+          {t('auth.no_account')} <Link to="/register" style={{ color: 'var(--primary)', fontWeight: '700' }}>{t('auth.create_account')}</Link>
         </div>
       </div>
     </div>

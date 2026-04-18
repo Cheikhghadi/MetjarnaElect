@@ -1,8 +1,12 @@
-import React from 'react';
 import { X, AlertTriangle } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirmer', cancelText = 'Annuler', type = 'danger' }) => {
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText, type = 'danger' }) => {
+  const { t } = useLanguage();
   if (!isOpen) return null;
+
+  const finalConfirmText = confirmText || t('common.confirm');
+  const finalCancelText = cancelText || t('common.cancel');
 
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) onClose();
@@ -72,7 +76,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
             className="btn-secondary"
             style={{ padding: '0.75rem', borderRadius: '12px', fontWeight: '700' }}
           >
-            {cancelText}
+            {finalCancelText}
           </button>
           <button 
             onClick={() => {
@@ -88,7 +92,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message, confirmText 
               boxShadow: type === 'danger' ? '0 10px 15px -3px rgba(239, 68, 68, 0.3)' : 'var(--shadow-md)'
             }}
           >
-            {confirmText}
+            {finalConfirmText}
           </button>
         </div>
       </div>

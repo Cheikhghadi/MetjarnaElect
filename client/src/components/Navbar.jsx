@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   Sun,
-  Moon
+  Moon,
+  AlertTriangle
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -218,7 +219,7 @@ const Navbar = () => {
                <p style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--text-main)', lineHeight: 1 }}>{user?.name?.split(' ')[0]}</p>
                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                  <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--success)' }}></div>
-                 <p style={{ fontSize: '0.6rem', color: 'var(--text-dim)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pro Member</p>
+                 <p style={{ fontSize: '0.6rem', color: 'var(--text-dim)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('common.pro_member')}</p>
                </div>
              </div>
           </Link>

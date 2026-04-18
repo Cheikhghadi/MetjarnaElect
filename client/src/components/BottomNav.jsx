@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import { Compass, PlusCircle, MessageSquare, User as UserIcon } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
+  const { t } = useLanguage();
   const user = JSON.parse(localStorage.getItem('user'));
 
   const activeTab = (path) => {
@@ -33,19 +35,19 @@ const BottomNav = () => {
     }}>
       <Link to="/dashboard" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: activeTab('dashboard') ? 'var(--primary)' : 'var(--text-dim)', transition: 'var(--transition)' }}>
         <Compass size={22} strokeWidth={activeTab('dashboard') ? 2.5 : 2} />
-        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>Explore</span>
+        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>{t('nav.explore')}</span>
       </Link>
       <Link to="/dashboard/add" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: activeTab('add') ? 'var(--primary)' : 'var(--text-dim)', transition: 'var(--transition)' }}>
         <PlusCircle size={22} strokeWidth={activeTab('add') ? 2.5 : 2} />
-        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>Sell</span>
+        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>{t('nav.sell')}</span>
       </Link>
       <Link to="/messages" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: activeTab('messages') ? 'var(--primary)' : 'var(--text-dim)', transition: 'var(--transition)' }}>
         <MessageSquare size={22} strokeWidth={activeTab('messages') ? 2.5 : 2} />
-        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>Inbox</span>
+        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>{t('nav.messages')}</span>
       </Link>
       <Link to={`/profile/${user?._id}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', color: activeTab('profile') ? 'var(--primary)' : 'var(--text-dim)', transition: 'var(--transition)' }}>
         <UserIcon size={22} strokeWidth={activeTab('profile') ? 2.5 : 2} />
-        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>Profile</span>
+        <span style={{ fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.02em' }}>{t('nav.profile')}</span>
       </Link>
     </div>
   );
