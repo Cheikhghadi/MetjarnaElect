@@ -40,6 +40,8 @@ const Messages = () => {
   const { t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
   const fileInputRef = useRef();
   const recordingInterval = useRef();
   
@@ -257,19 +259,88 @@ const Messages = () => {
     }
   };
 
-  const toggleRecording = () => {
+  const toggleRecording = async () => {
     if (!isRecording) {
-      setIsRecording(true);
-      setRecordingTime(0);
-      recordingInterval.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorderRef.current = new MediaRecorder(stream);
+        audioChunksRef.current = [];
+
+        mediaRecorderRef.current.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
+
+        mediaRecorderRef.current.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            const base64Audio = reader.result;
+            const content = `[AUDIO]${base64Audio}`;
+            
+            try {
+              await api.post(`/messages/${selectedUser._id}`, { content });
+              const msgData = {
+                threadId,
+                sender: user._id,
+                senderName: user.name,
+                content,
+                createdAt: new Date().toISOString()
+              };
+              setMessages(prev => [...prev, msgData]);
+              socketRef.current?.emit('send_message', msgData);
+              fetchInbox();
+            } catch (err) {
+              addToast("Erreur lors de l'envoi de la note vocale", 'error');
+            }
+          };
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorderRef.current.start();
+        setIsRecording(true);
+        setRecordingTime(0);
+        recordingInterval.current = setInterval(() => {
+          setRecordingTime(prev => prev + 1);
+        }, 1000);
+      } catch (err) {
+        addToast("Accès au micro refusé", 'error');
+      }
     } else {
       clearInterval(recordingInterval.current);
       setIsRecording(false);
-      const voiceMsg = `[AUDIO:Note vocale ${new Date().toLocaleTimeString()}]`;
-      setNewMessage(voiceMsg);
+      mediaRecorderRef.current?.stop();
     }
+  };
+
+  const shareLocation = () => {
+    if (!navigator.geolocation) {
+      return addToast("La géolocalisation n'est pas supportée par votre navigateur", 'error');
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+      const content = `[LOCATION]${latitude},${longitude}`;
+      
+      try {
+        await api.post(`/messages/${selectedUser._id}`, { content });
+        const msgData = {
+          threadId,
+          sender: user._id,
+          senderName: user.name,
+          content,
+          createdAt: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, msgData]);
+        socketRef.current?.emit('send_message', msgData);
+        fetchInbox();
+        addToast("Position partagée !", 'success');
+      } catch (err) {
+        addToast("Erreur lors du partage de la position", 'error');
+      }
+    }, (err) => {
+      addToast("Impossible d'accéder à votre position", 'error');
+    });
   };
 
   const formatTime = (seconds) => {
@@ -413,18 +484,28 @@ const Messages = () => {
                       <FileText size={20} />
                       <span style={{ fontSize: '0.85rem' }}>{msg.content.split(']')[0].replace('[FILE:', '')}</span>
                     </div>
-                  ) : msg.content.startsWith('[AUDIO:') ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '150px' }}>
-                      <button type="button" style={{ background: 'var(--primary)', color: 'white', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Play size={14} fill="white" />
-                      </button>
-                      <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }}>
-                        <div style={{ width: '30%', height: '100%', background: 'white', borderRadius: '2px' }}></div>
+                  ) : msg.content.startsWith('[AUDIO]') ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '200px' }}>
+                      <audio controls src={msg.content.replace('[AUDIO]', '')} style={{ height: '32px', maxWidth: '100%' }} />
+                    </div>
+                  ) : msg.content.startsWith('[LOCATION]') ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.1)', padding: '0.75rem', borderRadius: '10px' }}>
+                        <MapPin size={20} />
+                        <span style={{ fontSize: '0.85rem' }}>Ma position actuelle</span>
                       </div>
-                      <span style={{ fontSize: '0.7rem' }}>0:12</span>
+                      <a 
+                        href={`https://www.google.com/maps?q=${msg.content.replace('[LOCATION]', '')}`} 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="btn-secondary"
+                        style={{ padding: '0.5rem', borderRadius: '8px', fontSize: '0.75rem', textAlign: 'center', background: 'white', color: 'black' }}
+                      >
+                        Voir sur la carte
+                      </a>
                     </div>
                   ) : (
-                    <p>{msg.content}</p>
+                    <p style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{msg.content}</p>
                   )}
                   <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.4rem', textAlign: 'right' }}>
                     {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -446,6 +527,8 @@ const Messages = () => {
                       onClick={() => {
                         if (opt.type === 'image' || opt.type === 'file') {
                           fileInputRef.current?.click();
+                        } else if (opt.type === 'location') {
+                          shareLocation();
                         } else {
                           addToast(`Fonctionnalité "${opt.label}" bientôt disponible !`, 'info');
                         }
@@ -499,15 +582,36 @@ const Messages = () => {
                   </div>
                 </div>
                 
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <input 
-                    type="text" 
+                <div style={{ flex: 1, position: 'relative', minWidth: isMobile ? '120px' : '200px' }}>
+                  <textarea 
                     className="form-input" 
+                    rows={1}
                     placeholder={isRecording ? t('messages.recording') : t('messages.msg_placeholder')} 
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => {
+                      setNewMessage(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 150) + 'px';
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
                     disabled={isRecording}
-                    style={{ borderRadius: '25px', paddingLeft: '1.25rem', background: isRecording ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255,255,255,0.03)', color: isRecording ? 'var(--error)' : 'var(--text-main)' }}
+                    style={{ 
+                      borderRadius: '20px', 
+                      padding: '0.75rem 1.25rem', 
+                      background: isRecording ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255,255,255,0.03)', 
+                      color: isRecording ? 'var(--error)' : 'var(--text-main)',
+                      resize: 'none',
+                      overflowY: 'auto',
+                      maxHeight: '150px',
+                      display: 'block',
+                      width: '100%',
+                      lineHeight: '1.4'
+                    }}
                   />
                   {isRecording && (
                     <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', pointerEvents: 'none' }}>
