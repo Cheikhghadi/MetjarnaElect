@@ -22,8 +22,78 @@ import {
   CheckCircle2,
   Play,
   Pause,
-  AlertCircle
+  AlertCircle,
+  Link as LinkIcon
 } from 'lucide-react';
+
+const VoicePlayer = ({ src }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef(new Audio(src));
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    
+    const updateProgress = () => {
+      setProgress((audio.currentTime / audio.duration) * 100);
+    };
+    
+    const onLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
+    
+    const onEnded = () => {
+      setIsPlaying(false);
+      setProgress(0);
+    };
+
+    audio.addEventListener('timeupdate', updateProgress);
+    audio.addEventListener('loadedmetadata', onLoadedMetadata);
+    audio.addEventListener('ended', onEnded);
+    
+    return () => {
+      audio.pause();
+      audio.removeEventListener('timeupdate', updateProgress);
+      audio.removeEventListener('loadedmetadata', onLoadedMetadata);
+      audio.removeEventListener('ended', onEnded);
+    };
+  }, [src]);
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const formatTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '200px' }}>
+      <button 
+        onClick={togglePlay}
+        type="button" 
+        style={{ background: 'var(--primary)', color: 'white', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+      >
+        {isPlaying ? <Pause size={16} fill="white" /> : <Play size={16} fill="white" style={{ marginLeft: '2px' }} />}
+      </button>
+      <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', position: 'relative' }}>
+        <div style={{ width: `${progress}%`, height: '100%', background: 'white', borderRadius: '2px', transition: 'width 0.1s linear' }}></div>
+      </div>
+      <span style={{ fontSize: '0.7rem', fontWeight: '600', minWidth: '30px' }}>
+        {isPlaying ? formatTime(audioRef.current.currentTime) : formatTime(duration)}
+      </span>
+    </div>
+  );
+};
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 
@@ -352,6 +422,30 @@ const Messages = () => {
     });
   };
 
+  const shareContact = async () => {
+    if (!selectedUser) return;
+    
+    // Formatting as [CONTACT]ID|NAME|AVATAR
+    const content = `[CONTACT]${selectedUser._id}|${selectedUser.name}|${selectedUser.avatar || ''}`;
+    
+    try {
+      await api.post(`/messages/${selectedUser._id}`, { content });
+      const msgData = {
+        threadId,
+        sender: user._id,
+        senderName: user.name,
+        content,
+        createdAt: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, msgData]);
+      socketRef.current?.emit('send_message', msgData);
+      fetchInbox();
+      addToast("Contact partagé !", 'success');
+    } catch (err) {
+      addToast("Erreur lors du partage du contact", 'error');
+    }
+  };
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -496,8 +590,27 @@ const Messages = () => {
                       <span style={{ fontSize: '0.85rem' }}>{msg.content.split(']')[0].replace('[FILE:', '')}</span>
                     </div>
                   ) : msg.content.startsWith('[AUDIO]') ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '200px' }}>
-                      <audio controls src={msg.content.replace('[AUDIO]', '')} style={{ height: '32px', maxWidth: '100%' }} />
+                    <VoicePlayer src={msg.content.replace('[AUDIO]', '')} />
+                  ) : msg.content.startsWith('[CONTACT]') ? (
+                    <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '15px', padding: '1rem', minWidth: '220px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ width: '45px', height: '45px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          {msg.content.split('|')[2] ? (
+                            <img src={msg.content.split('|')[2]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : <UserIcon size={20} />}
+                        </div>
+                        <div>
+                          <p style={{ fontWeight: '800', fontSize: '0.9rem' }}>{msg.content.split('|')[1]}</p>
+                          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)' }}>Contact ZenShop</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => navigate(`/profile/${msg.content.split('|')[0].replace('[CONTACT]', '')}`)}
+                        className="btn-secondary" 
+                        style={{ width: '100%', padding: '0.6rem', borderRadius: '10px', fontSize: '0.8rem', background: 'white', color: 'black', border: 'none' }}
+                      >
+                        Voir le profil
+                      </button>
                     </div>
                   ) : msg.content.startsWith('[LOCATION]') ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -540,6 +653,8 @@ const Messages = () => {
                           fileInputRef.current?.click();
                         } else if (opt.type === 'location') {
                           shareLocation();
+                        } else if (opt.type === 'contact') {
+                          shareContact();
                         } else {
                           addToast(`Fonctionnalité "${opt.label}" bientôt disponible !`, 'info');
                         }
@@ -554,6 +669,7 @@ const Messages = () => {
                     type="file" 
                     ref={fileInputRef} 
                     style={{ display: 'none' }} 
+                    accept="image/*,video/*,application/pdf,.doc,.docx,.txt"
                     onChange={handleFileUpload} 
                   />
                 </div>
@@ -633,15 +749,26 @@ const Messages = () => {
                 </div>
  
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    type="button" 
-                    onClick={toggleRecording}
-                    style={{ background: isRecording ? 'var(--error)' : 'rgba(255,255,255,0.05)', color: isRecording ? 'white' : 'var(--text-main)', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Mic size={20} />
-                  </button>
-                  <button type="submit" className="btn-primary" style={{ width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
-                    <Send size={18} />
-                  </button>
+                  {(!newMessage.trim() && !isRecording) ? (
+                    <button 
+                      type="button" 
+                      onClick={toggleRecording}
+                      style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Mic size={20} />
+                    </button>
+                  ) : (
+                    <button type="submit" className="btn-primary" style={{ width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                      <Send size={18} />
+                    </button>
+                  )}
+                  {isRecording && (
+                    <button 
+                      type="button" 
+                      onClick={toggleRecording}
+                      style={{ background: 'var(--error)', color: 'white', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Mic size={20} />
+                    </button>
+                  )}
                 </div>
               </form>
             </div>
