@@ -114,8 +114,8 @@ const Messages = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   
-  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dzvj0qzsc'; // Placeholder or env
-  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'zenshop_unsigned'; 
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dofi4lsct'; 
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'Imag_backup'; 
 
   const uploadToCloudinary = async (file, resourceType = 'auto') => {
     const formData = new FormData();
@@ -123,7 +123,7 @@ const Messages = () => {
     formData.append('upload_preset', UPLOAD_PRESET);
 
     try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
         method: 'POST',
         body: formData,
       });
