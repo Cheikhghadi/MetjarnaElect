@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../context/LanguageContext';
 import api from '../utils/api';
 import { 
   Compass, 
@@ -21,6 +22,7 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [user, setUser] = React.useState(JSON.parse(localStorage.getItem('user')));
+  const { language, setLanguage, t } = useLanguage();
 
   const [notifications, setNotifications] = React.useState([]);
   const [showNotifs, setShowNotifs] = React.useState(false);
@@ -57,6 +59,12 @@ const Navbar = () => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  const cycleLanguage = () => {
+    const langs = ['fr', 'en', 'ar'];
+    const nextIndex = (langs.indexOf(language) + 1) % langs.length;
+    setLanguage(langs[nextIndex]);
   };
 
   const markAsRead = async () => {
@@ -117,12 +125,12 @@ const Navbar = () => {
             <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
             <input 
               type="text" 
-              placeholder="Rechercher un article..." 
+              placeholder={t('nav.search')} 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ 
                 width: '100%', 
-                padding: '0.6rem 1rem 0.6rem 2.8rem', 
+                padding: language === 'ar' ? '0.6rem 2.8rem 0.6rem 1rem' : '0.6rem 1rem 0.6rem 2.8rem', 
                 background: 'rgba(255,255,255,0.03)', 
                 border: '1px solid var(--border)', 
                 borderRadius: '12px', 
@@ -138,25 +146,32 @@ const Navbar = () => {
           <div className="nav-links" style={{ background: 'rgba(255,255,255,0.03)', padding: '0.4rem', borderRadius: '16px', border: '1px solid var(--border)' }}>
             <Link to="/dashboard" className={`nav-link ${activeTab('dashboard') ? 'active' : ''}`} style={{ padding: '0.5rem 1.2rem', borderRadius: '12px' }}>
               <Compass size={18} />
-              <span style={{ fontSize: '0.85rem' }}>Explore</span>
+              <span style={{ fontSize: '0.85rem' }}>{t('nav.explore')}</span>
             </Link>
             <Link to="/dashboard/suivi" className={`nav-link ${activeTab('suivi') ? 'active' : ''}`} style={{ padding: '0.5rem 1.2rem', borderRadius: '12px' }}>
               <Users size={18} />
-              <span style={{ fontSize: '0.85rem' }}>Following</span>
+              <span style={{ fontSize: '0.85rem' }}>{t('nav.following')}</span>
             </Link>
             <Link to="/dashboard/add" className={`nav-link ${activeTab('add') ? 'active' : ''}`} style={{ padding: '0.5rem 1.2rem', borderRadius: '12px' }}>
               <PlusCircle size={18} />
-              <span style={{ fontSize: '0.85rem' }}>Sell</span>
+              <span style={{ fontSize: '0.85rem' }}>{t('nav.sell')}</span>
             </Link>
             <Link to="/messages" className={`nav-link ${activeTab('messages') ? 'active' : ''}`} style={{ padding: '0.5rem 1.2rem', borderRadius: '12px' }}>
               <MessageSquare size={18} />
-              <span style={{ fontSize: '0.85rem' }}>Messages</span>
+              <span style={{ fontSize: '0.85rem' }}>{t('nav.messages')}</span>
             </Link>
           </div>
         </div>
         
         {/* User Profile */}
         <div className="nav-user" style={{ gap: '1rem' }}>
+          <button 
+             onClick={cycleLanguage}
+             title="Changer de langue / Change Language / تغيير اللغة"
+             style={{ background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '1.2rem', fontWeight: '800' }}>
+             {language === 'ar' ? '🇸🇦' : language === 'en' ? '🇬🇧' : '🇫🇷'}
+          </button>
+          
           <button 
              onClick={toggleTheme}
              style={{ background: 'transparent', color: 'var(--text-muted)', border: 'none', cursor: 'pointer' }}>
@@ -177,11 +192,11 @@ const Navbar = () => {
              )}
 
              {showNotifs && (
-               <div className="glass animate-fade" style={{ position: 'absolute', top: '100%', right: 0, width: '320px', padding: '1rem', marginTop: '1rem', borderRadius: '16px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', zIndex: 100 }}>
-                 <h4 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: '800' }}>Notifications</h4>
+               <div className="glass animate-fade" style={{ position: 'absolute', top: '100%', right: language === 'ar' ? 'auto' : 0, left: language === 'ar' ? 0 : 'auto', width: '320px', padding: '1rem', marginTop: '1rem', borderRadius: '16px', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', zIndex: 100 }}>
+                 <h4 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: '800' }}>{t('nav.notifications')}</h4>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '300px', overflowY: 'auto' }}>
                    {notifications.length === 0 ? (
-                     <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem 0' }}>Aucune notification</p>
+                     <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem', textAlign: 'center', padding: '1rem 0' }}>{t('nav.no_notifs')}</p>
                    ) : (
                      notifications.map(n => (
                        <div key={n._id} style={{ padding: '0.75rem', background: n.read ? 'transparent' : 'rgba(139, 92, 246, 0.1)', borderRadius: '8px', border: '1px solid var(--border)' }}>

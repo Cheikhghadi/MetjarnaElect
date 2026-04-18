@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import ProductCard from '../../components/ProductCard';
 import SkeletonCard from '../../components/SkeletonCard';
+import { useLanguage } from '../../context/LanguageContext';
 import { Search, Filter, Sparkles } from 'lucide-react';
 
 const Discover = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
   
   const [totalPages, setTotalPages] = useState(1);
   
@@ -94,10 +96,10 @@ const Discover = () => {
         }}></div>
         
         <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: '3rem', fontWeight: '1000', letterSpacing: '-0.04em', marginBottom: '0.5rem' }}>
-          Explore <span className="text-gradient">ZenShop</span>
+          {t('discover.title_explore')} <span className="text-gradient">{t('discover.title_zenshop')}</span>
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '600px', fontWeight: '500' }}>
-          Discover the most exclusive items and services from our premium community.
+          {t('discover.subtitle')}
         </p>
       </div>
 
@@ -121,7 +123,7 @@ const Discover = () => {
               transition: 'var(--transition)'
             }}
           >
-            {cat}
+            {t(`cat.${cat}`)}
           </button>
         ))}
       </div>
@@ -134,7 +136,7 @@ const Discover = () => {
             <input 
               type="text" 
               className="form-input" 
-              placeholder="Nom du produit..."
+              placeholder={t('discover.search_placeholder')}
               value={filters.name} 
               onChange={e => setFilters({...filters, name: e.target.value})}
               style={{ paddingLeft: '2.8rem', borderRadius: '12px', background: 'rgba(0,0,0,0.1)' }}
@@ -146,7 +148,7 @@ const Discover = () => {
               <input 
                 type="number" 
                 className="form-input" 
-                placeholder="Prix Min"
+                placeholder={t('discover.min_price')}
                 value={filters.minPrice} 
                 onChange={e => setFilters({...filters, minPrice: e.target.value})}
                 style={{ width: '110px', paddingLeft: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.1)' }}
@@ -157,7 +159,7 @@ const Discover = () => {
               <input 
                 type="number" 
                 className="form-input" 
-                placeholder="Prix Max"
+                placeholder={t('discover.max_price')}
                 value={filters.maxPrice} 
                 onChange={e => setFilters({...filters, maxPrice: e.target.value})}
                 style={{ width: '110px', paddingLeft: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.1)' }}
@@ -171,14 +173,14 @@ const Discover = () => {
             onChange={e => setFilters({...filters, delivery: e.target.value})}
             style={{ width: '140px', borderRadius: '12px', background: 'rgba(0,0,0,0.1)', cursor: 'pointer' }}
           >
-            <option value="">Livraison</option>
-            <option value="free">Gratuite</option>
-            <option value="paid">Payante</option>
+            <option value="">{t('discover.delivery')}</option>
+            <option value="free">{t('discover.free')}</option>
+            <option value="paid">{t('discover.paid')}</option>
           </select>
 
           <button type="submit" className="btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Filter size={18} />
-            <span>Filtrer</span>
+            <span>{t('discover.filter')}</span>
           </button>
         </form>
       </div>
@@ -195,8 +197,8 @@ const Discover = () => {
           {products.length === 0 && (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem 2rem' }}>
               <div style={{ color: 'var(--text-dim)', opacity: 0.3, marginBottom: '1.5rem' }}><Search size={64} /></div>
-              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', fontWeight: '600' }}>Oups ! Aucun article trouvé.</p>
-              <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Essayez d'ajuster vos filtres pour voir plus de pépites.</p>
+              <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', fontWeight: '600' }}>{t('discover.no_results')}</p>
+              <p style={{ color: 'var(--text-dim)', fontSize: '0.9rem', marginTop: '0.5rem' }}>{t('discover.try_adjusting')}</p>
             </div>
           )}
         </div>
@@ -211,10 +213,10 @@ const Discover = () => {
             className="btn-secondary"
             style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', opacity: filters.page === 1 ? 0.5 : 1 }}
           >
-            Précédent
+            {t('discover.prev')}
           </button>
           <span style={{ fontWeight: '700', color: 'var(--text-main)' }}>
-            Page {filters.page} sur {totalPages}
+             {t('discover.page')} {filters.page} {t('discover.of')} {totalPages}
           </span>
           <button 
             onClick={() => handlePageChange(filters.page + 1)}
@@ -222,7 +224,7 @@ const Discover = () => {
             className="btn-primary"
             style={{ padding: '0.6rem 1.2rem', borderRadius: '12px', opacity: filters.page === totalPages ? 0.5 : 1 }}
           >
-            Suivant
+            {t('discover.next')}
           </button>
         </div>
       )}

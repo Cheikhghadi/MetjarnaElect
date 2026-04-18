@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Star, 
   MessageSquare, 
@@ -27,6 +27,7 @@ const ProductCard = ({ product }) => {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const { t } = useLanguage();
 
   React.useEffect(() => {
     const handleUserChange = () => {
@@ -149,7 +150,7 @@ const ProductCard = ({ product }) => {
                 <ShieldCheck size={14} style={{ color: 'var(--primary)' }} />
               )}
             </div>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{product.seller.followersCount || 0} abonnés</p>
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{product.seller.followersCount || 0} {t('product.followers')}</p>
           </div>
         </div>
         
@@ -166,7 +167,7 @@ const ProductCard = ({ product }) => {
               border: isFollowing ? '1px solid var(--border)' : 'none'
             }}
           >
-            {isFollowing ? 'Suivi' : 'Suivre'}
+            {isFollowing ? t('product.following') : t('product.follow')}
           </button>
         )}
       </div>
@@ -214,13 +215,13 @@ const ProductCard = ({ product }) => {
         })()}
         {product.delivery === 0 && (
           <span style={{ position: 'absolute', top: '15px', right: '15px', background: 'var(--success)', color: 'white', padding: '6px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.05em', zIndex: 15 }}>
-            LIVRAISON GRATUITE
+            {t('product.free_shipping')}
           </span>
         )}
         {product.status === 'sold' && (
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
             <span style={{ transform: 'rotate(-15deg)', background: 'var(--error)', color: 'white', padding: '10px 30px', borderRadius: '8px', fontSize: '1.5rem', fontWeight: '900', letterSpacing: '0.1em', border: '3px solid white', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
-              VENDU
+              {t('product.sold')}
             </span>
           </div>
         )}
@@ -280,7 +281,7 @@ const ProductCard = ({ product }) => {
           <button 
             onClick={() => {
               navigator.clipboard.writeText(window.location.origin + `/product/${product._id}`);
-              addToast('Lien copié !');
+              addToast(t('product.copied'));
             }}
             style={{ background: 'transparent', color: 'var(--text-dim)', padding: 0, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
@@ -307,7 +308,7 @@ const ProductCard = ({ product }) => {
                 style={{ height: '46px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Edit2 size={18} style={{ marginRight: '8px' }} />
-                Modifier
+                {t('product.edit')}
               </button>
               <button 
                 onClick={() => setIsDeleteModalOpen(true)}
@@ -315,7 +316,7 @@ const ProductCard = ({ product }) => {
                 style={{ height: '46px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 <Trash2 size={18} style={{ marginRight: '8px' }} />
-                Supprimer
+                {t('product.delete')}
               </button>
             </div>
             <button 
@@ -324,7 +325,7 @@ const ProductCard = ({ product }) => {
               style={{ width: '100%', height: '46px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', border: '1px solid var(--border)', background: product.status === 'sold' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.05)', color: product.status === 'sold' ? 'var(--success)' : 'var(--text-main)' }}
             >
               <Package size={18} style={{ marginRight: '8px' }} />
-              {product.status === 'sold' ? 'Remettre en vente' : 'Marquer comme vendu'}
+              {product.status === 'sold' ? t('product.sell_again') : t('product.mark_sold')}
             </button>
             <ConfirmModal 
               isOpen={isDeleteModalOpen}
@@ -372,7 +373,7 @@ const ProductCard = ({ product }) => {
               }}
             >
               <Send size={18} style={{ marginRight: '8px' }} />
-              Direct
+              {t('product.direct')}
             </button>
           </div>
         )}

@@ -34,62 +34,66 @@ const ProtectedLayout = ({ children }) => {
   );
 };
 
+import { LanguageProvider } from './context/LanguageContext';
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/verify" element={<Verify />} />
-        <Route path="/setup-profile" element={<SetupProfile />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Protected Routes with Global Navbar */}
-        <Route 
-          path="/dashboard/*" 
-          element={
-            <ProtectedLayout>
-              <Dashboard />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/messages" 
-          element={
-            <ProtectedLayout>
-              <Messages />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/profile/:id" 
-          element={
-            <ProtectedLayout>
-              <Profile />
-            </ProtectedLayout>
-          } 
-        />
-        <Route 
-          path="/edit-profile" 
-          element={
-            <ProtectedLayout>
-              <EditProfile />
-            </ProtectedLayout>
-          } 
-        />
-        
-        <Route 
-          path="/dashboard/edit/:id" 
-          element={
-            <ProtectedLayout>
-              <Dashboard />
-            </ProtectedLayout>
-          } 
-        />
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-      </Routes>
-    </Router>
+    <LanguageProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/verify" element={<Verify />} />
+          <Route path="/setup-profile" element={<SetupProfile />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Protected Routes with Global Navbar */}
+          <Route 
+            path="/dashboard/*" 
+            element={
+              <ProtectedLayout>
+                <Dashboard />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/messages" 
+            element={
+              <ProtectedLayout>
+                <Messages />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/profile/:id" 
+            element={
+              <ProtectedLayout>
+                <Profile />
+              </ProtectedLayout>
+            } 
+          />
+          <Route 
+            path="/edit-profile" 
+            element={
+              <ProtectedLayout>
+                <EditProfile />
+              </ProtectedLayout>
+            } 
+          />
+          
+          <Route 
+            path="/dashboard/edit/:id" 
+            element={
+              <ProtectedLayout>
+                <Dashboard />
+              </ProtectedLayout>
+            } 
+          />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </Router>
+    </LanguageProvider>
   );
 }
 
