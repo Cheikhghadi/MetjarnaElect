@@ -114,8 +114,8 @@ const Messages = () => {
   const [recordingTime, setRecordingTime] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   
-  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dofi4lsct'; 
-  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'Imag_backup'; 
+  const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME; 
+  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET; 
 
   const uploadToCloudinary = async (file, resourceType = 'auto') => {
     if (!CLOUD_NAME || CLOUD_NAME === 'dzvj0qzsc' || !UPLOAD_PRESET) {
