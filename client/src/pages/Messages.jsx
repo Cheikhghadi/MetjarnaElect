@@ -118,6 +118,10 @@ const Messages = () => {
   const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'Imag_backup'; 
 
   const uploadToCloudinary = async (file, resourceType = 'auto') => {
+    if (!CLOUD_NAME || CLOUD_NAME === 'dzvj0qzsc' || !UPLOAD_PRESET) {
+      throw new Error("Configuration Cloudinary manquante ou invalide");
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
@@ -131,9 +135,12 @@ const Messages = () => {
       if (data.secure_url) {
         return data.secure_url;
       }
-      throw new Error(data.error?.message || 'Upload failed');
+      if (data.error) {
+        throw new Error(data.error.message || 'Upload failed');
+      }
+      throw new Error('Réponse Cloudinary invalide');
     } catch (err) {
-      console.error('Cloudinary Error:', err);
+      console.error('Cloudinary Error Details:', err);
       throw err;
     }
   };
@@ -358,8 +365,8 @@ const Messages = () => {
       fetchInbox();
       addToast("Fichier envoyé !", "success");
     } catch (err) {
-      console.error(err);
-      addToast("Erreur lors de l'envoi du fichier", 'error');
+      console.error('Upload catch block:', err);
+      addToast(`Échec: ${err.message}`, 'error');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -401,7 +408,8 @@ const Messages = () => {
             fetchInbox();
             addToast("Note vocale envoyée", "success");
           } catch (err) {
-            addToast("Erreur lors de l'envoi de la note vocale", 'error');
+            console.error('Audio Upload Error:', err);
+            addToast(`Erreur Audio: ${err.message}`, 'error');
           } finally {
             setIsUploading(false);
           }
