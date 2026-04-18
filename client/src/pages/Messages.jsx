@@ -727,19 +727,30 @@ const Messages = () => {
                 </div>
               )}
 
-              <form onSubmit={handleSendMessage} style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.75rem', alignItems: 'center', background: 'rgba(0,0,0,0.1)' }}>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <form onSubmit={handleSendMessage} style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.75rem', alignItems: 'flex-end', background: 'rgba(0,0,0,0.15)' }}>
+                <div style={{ 
+                  flex: 1, 
+                  display: 'flex', 
+                  alignItems: 'flex-end', 
+                  gap: '0.25rem', 
+                  background: 'rgba(255,255,255,0.03)', 
+                  borderRadius: '24px', 
+                  padding: '4px 8px',
+                  border: '1px solid var(--border)',
+                  minHeight: '44px'
+                }}>
                   <button 
                     type="button" 
                     onClick={() => setShowAttachments(!showAttachments)}
-                    style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' }}>
+                    style={{ background: 'transparent', color: 'var(--text-dim)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {showAttachments ? <X size={20} /> : <Plus size={20} />}
                   </button>
+                  
                   <div style={{ position: 'relative' }}>
                     <button 
                       type="button" 
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      style={{ background: 'transparent', color: 'var(--text-dim)', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Smile size={20} />
                     </button>
                     {showEmojiPicker && (
@@ -759,9 +770,7 @@ const Messages = () => {
                       </div>
                     )}
                   </div>
-                </div>
-                
-                <div style={{ flex: 1, position: 'relative', minWidth: isMobile ? '120px' : '200px' }}>
+
                   <textarea 
                     className="form-input" 
                     rows={1}
@@ -780,22 +789,27 @@ const Messages = () => {
                     }}
                     disabled={isRecording}
                     style={{ 
-                      borderRadius: '20px', 
-                      padding: '0.75rem 1.25rem', 
-                      background: isRecording ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255,255,255,0.03)', 
+                      borderRadius: '0', 
+                      padding: '8px 4px', 
+                      background: 'transparent', 
                       color: isRecording ? 'var(--error)' : 'var(--text-main)',
+                      border: 'none',
+                      boxShadow: 'none',
                       resize: 'none',
                       overflowY: 'auto',
                       maxHeight: '150px',
                       display: 'block',
                       width: '100%',
-                      lineHeight: '1.4'
+                      lineHeight: '1.4',
+                      fontSize: '0.95rem',
+                      minHeight: '36px'
                     }}
                   />
+                  
                   {isRecording && (
-                    <div style={{ position: 'absolute', right: '1.5rem', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: '0.5rem', pointerEvents: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', paddingRight: '0.75rem', paddingBottom: '8px' }}>
                       <span style={{ width: '8px', height: '8px', background: 'var(--error)', borderRadius: '50%', animation: 'pulse 1s infinite' }}></span>
-                      <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--error)' }}>{formatTime(recordingTime)}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--error)' }}>{formatTime(recordingTime)}</span>
                     </div>
                   )}
                 </div>

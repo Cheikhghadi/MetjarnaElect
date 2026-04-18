@@ -53,6 +53,7 @@ const io = new Server(server, {
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   },
+  maxHttpBufferSize: 15e6, // 15MB
 });
 
 app.use(
