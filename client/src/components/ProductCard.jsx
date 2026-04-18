@@ -275,7 +275,7 @@ const ProductCard = ({ product }) => {
         
         <div style={{ display: 'flex', gap: '0.85rem' }}>
           <button 
-            onClick={() => navigate(`/messages?user=${sellerId}`)}
+            onClick={() => navigate(`/messages?user=${sellerId}&product=${encodeURIComponent(product.name)}`)}
             style={{ background: 'transparent', color: 'var(--text-dim)', padding: 0, border: 'none', cursor: 'pointer', transition: 'var(--transition)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-dim)'}
@@ -368,7 +368,7 @@ const ProductCard = ({ product }) => {
               WhatsApp
             </a>
             <button 
-              onClick={() => navigate(`/messages?user=${sellerId}`)}
+              onClick={() => navigate(`/messages?user=${sellerId}&product=${encodeURIComponent(product.name)}`)}
               className="btn-primary" 
               style={{ 
                  height: '46px', borderRadius: '12px', fontSize: '0.9rem', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center',

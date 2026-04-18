@@ -118,7 +118,9 @@ const translations = {
       msg_placeholder: 'Tapez votre message...',
       send: 'Envoyer',
       select_conv: 'Sélectionnez une conversation ou commencez-en une nouvelle.',
-      no_messages: 'Aucun message pour le moment.'
+      no_messages: 'Aucun message pour le moment.',
+      interest_prefill: 'Salam, je suis intéressé par votre article: {product}. Est-il toujours disponible ?',
+      online: 'En ligne'
     },
     profile: {
       followers: 'abonnés',
@@ -278,7 +280,9 @@ const translations = {
       msg_placeholder: 'Type your message...',
       send: 'Send',
       select_conv: 'Select a conversation or start a new one.',
-      no_messages: 'No messages yet.'
+      no_messages: 'No messages yet.',
+      interest_prefill: 'Hi, I am interested in your item: {product}. Is it still available?',
+      online: 'Online'
     },
     profile: {
       followers: 'followers',
@@ -438,7 +442,9 @@ const translations = {
       msg_placeholder: 'اكتب رسالتك...',
       send: 'إرسال',
       select_conv: 'اختر محادثة أو ابدأ واحدة جديدة.',
-      no_messages: 'لا يوجد رسائل حتى الآن.'
+      no_messages: 'لا يوجد رسائل حتى الآن.',
+      interest_prefill: 'السلام عليكم، أنا مهتم بمنتجك: {product}. هل لا يزال متوفراً؟',
+      online: 'متصل الآن'
     },
     profile: {
       followers: 'متابعون',
@@ -500,7 +506,7 @@ export const LanguageProvider = ({ children }) => {
     document.documentElement.setAttribute('lang', language);
   }, [language]);
 
-  const t = (key) => {
+  const t = (key, params = {}) => {
     const keys = key.split('.');
     let result = translations[language];
     for (const k of keys) {
@@ -510,6 +516,13 @@ export const LanguageProvider = ({ children }) => {
         return key; 
       }
     }
+    
+    if (typeof result === 'string' && params) {
+      Object.entries(params).forEach(([k, v]) => {
+        result = result.replace(`{${k}}`, v);
+      });
+    }
+    
     return result;
   };
 

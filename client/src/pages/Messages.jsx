@@ -35,6 +35,7 @@ const Messages = () => {
   const [threadId, setThreadId] = useState('');
   const [showAttachments, setShowAttachments] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const { addToast } = useToast();
   const { t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
@@ -49,6 +50,7 @@ const Messages = () => {
 
   const query = new URLSearchParams(location.search);
   const targetId = query.get('user');
+  const productName = query.get('product');
 
   const socketRef = useRef(null);
   const threadIdRef = useRef('');
@@ -60,6 +62,12 @@ const Messages = () => {
     } catch (err) {
       console.error(err);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -101,8 +109,11 @@ const Messages = () => {
     fetchInbox();
     if (targetId) {
       startConversation(targetId);
+      if (productName) {
+        setNewMessage(t('messages.interest_prefill', { product: productName }) || `Salam, je suis intéressé par votre article: ${productName}. Est-il toujours disponible ?`);
+      }
     }
-  }, [targetId, fetchInbox, startConversation]);
+  }, [targetId, fetchInbox, startConversation, productName, t]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -276,12 +287,25 @@ const Messages = () => {
 
   const emojis = ['😊', '😂', '😍', '🤔', '👍', '🔥', '✨', '🙌', '💯', '🙏', '😎', '🎉', '❤️', '💙', '✅'];
 
+  const isMobile = windowWidth <= 768;
+
   return (
-    <div className="container" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 400px) 1fr', height: 'calc(100vh - 120px)', paddingTop: '120px', gap: '1.5rem', paddingBottom: '2rem' }}>
+    <div className="container" style={{ 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? '1fr' : 'minmax(300px, 400px) 1fr', 
+      height: 'calc(100vh - 120px)', 
+      paddingTop: '120px', 
+      gap: isMobile ? '0' : '1.5rem', 
+      paddingBottom: '2rem' 
+    }}>
       {/* Sidebar - Inbox */}
-      <div className="glass" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800' }}>{t('messages.inbox')}</h2>
+      <div className="glass" style={{ 
+        display: isMobile && selectedUser ? 'none' : 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden' 
+      }}>
+        <div style={{ padding: isMobile ? '1.5rem 1rem' : '2rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
+          <h2 style={{ fontSize: isMobile ? '1.25rem' : '1.5rem', fontWeight: '800' }}>{t('messages.inbox')}</h2>
         </div>
         <div className="inbox-scroll" style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
           {inbox.map(item => (
@@ -327,19 +351,38 @@ const Messages = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="glass" style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="glass" style={{ 
+        display: isMobile && !selectedUser ? 'none' : 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden' 
+      }}>
         {selectedUser ? (
           <>
             {/* Header */}
             <div 
-              onClick={() => navigate(`/profile/${selectedUser._id}`)}
-              style={{ padding: '1.25rem 2rem', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', color: 'var(--primary)' }}>
-                {selectedUser.avatar ? <img src={selectedUser.avatar} style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}} onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/100x100/8b5cf6/ffffff?text=U'; }} /> : <UserIcon size={20} />}
-              </div>
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '800' }}>{selectedUser.name}</h3>
-                <p style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: '700' }}>• {t('messages.online') || 'En ligne'}</p>
+              style={{ padding: '1.25rem 2rem', borderBottom: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {isMobile && (
+                <button 
+                  onClick={() => {
+                    setSelectedUser(null);
+                    navigate('/messages');
+                  }}
+                  style={{ background: 'transparent', color: 'var(--text-main)', padding: '0.5rem', marginLeft: '-1rem' }}
+                >
+                  <X size={24} />
+                </button>
+              )}
+              <div 
+                onClick={() => navigate(`/profile/${selectedUser._id}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', flex: 1 }}
+              >
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', color: 'var(--primary)' }}>
+                  {selectedUser.avatar ? <img src={selectedUser.avatar} style={{width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover'}} onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/100x100/8b5cf6/ffffff?text=U'; }} /> : <UserIcon size={20} />}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '800' }}>{selectedUser.name}</h3>
+                  <p style={{ fontSize: '0.7rem', color: 'var(--success)', fontWeight: '700' }}>• {t('messages.online') || 'En ligne'}</p>
+                </div>
               </div>
             </div>
             
